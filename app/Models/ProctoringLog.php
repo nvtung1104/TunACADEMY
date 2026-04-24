@@ -1,0 +1,10 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+class ProctoringLog extends Model
+{
+    protected $fillable = ['attempt_id', 'student_id', 'event_type', 'description', 'screenshot_path', 'occurred_at'];
+    protected $casts = ['occurred_at' => 'datetime'];
+    public function attempt() { return $this->belongsTo(ExamAttempt::class, 'attempt_id'); }
+    public function student() { return $this->belongsTo(User::class, 'student_id'); }
+}

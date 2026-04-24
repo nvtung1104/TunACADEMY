@@ -1,0 +1,103 @@
+<?php
+namespace App\Http\Controllers\Api\Student;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\Exam\{ExamResource, ExamAttemptResource};
+use App\Models\{Exam, ExamAttempt, StudentAnswer};
+use Illuminate\Http\Request;
+
+class ExamController extends Controller
+{
+    public function index(Request $request)
+    {
+        $classroomIds = $request->user()->classrooms()->pluck('classrooms.id');
+        $exams = Exam::with(['subject', 'classroom'])
+            ->whereIn('classroom_id', $classroomIds)->published()
+            ->where('closed_at', '>', now())->latest('opened_at')->paginate(20);
+        return ExamResource::collection($exams);
+    }
+
+    public function show(Request $request, Exam $exam)
+    {
+        $this->checkAccess($request, $exam);
+        $attempt = $exam->attempts()->where('student_id', $request->user()->id)->latest()->first();
+        return $this->success([
+            'exam'    => new ExamResource($exam),
+            'attempt' => $attempt ? new ExamAttemptResource($attempt) : null,
+        ]);
+    }
+
+    public function start(Request $request, Exam $exam)
+    {
+        $this->checkAccess($request, $exam);
+        abort_unless($exam->isOpen(), 422, 'Bài kiểm tra chưa mở hoặc đã kết thúc');
+
+        $existing = $exam->attempts()->where('student_id', $request->user()->id)->where('status', 'in_progress')->first();
+        if ($existing) return $this->success(new ExamAttemptResource($existing), 'Tiếp tục bài làm');
+
+        abort_if(
+            !$exam->allow_retake && $exam->attempts()->where('student_id', $request->user()->id)->whereNotNull('submitted_at')->exists(),
+            422, 'Bạn đã nộp bài, không được làm lại'
+        );
+
+        $attempt = ExamAttempt::create([
+            'exam_id'    => $exam->id,
+            'student_id' => $request->user()->id,
+            'started_at' => now(),
+            'expires_at' => now()->addMinutes($exam->duration_minutes),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        $questions = $exam->shuffle_questions ? $exam->questions->shuffle() : $exam->questions;
+        return $this->success([
+            'attempt'   => new ExamAttemptResource($attempt),
+            'questions' => $questions->map(fn($q) => [
+                'id'         => $q->id,
+                'type'       => $q->type,
+                'content'    => $q->content,
+                'options'    => ($exam->shuffle_options && $q->options) ? collect($q->options)->shuffle()->values() : $q->options,
+                'points'     => $q->points,
+                'audio_path' => $q->audio_path,
+            ]),
+        ], 'Bắt đầu làm bài');
+    }
+
+    public function submit(Request $request, Exam $exam)
+    {
+        $attempt = $exam->attempts()->where('student_id', $request->user()->id)->where('status', 'in_progress')->firstOrFail();
+        $request->validate(['answers' => 'required|array']);
+
+        $earnedPoints = 0; $totalPoints = 0; $totalCorrect = 0;
+        foreach ($request->answers as $questionId => $answer) {
+            $question = $exam->questions()->find($questionId);
+            if (!$question) continue;
+            $isCorrect = trim((string)$answer) === trim((string)$question->correct_answer);
+            $pointsEarned = $isCorrect ? $question->points : 0;
+            StudentAnswer::updateOrCreate(
+                ['attempt_id' => $attempt->id, 'question_id' => $question->id],
+                ['answer' => $answer, 'is_correct' => $isCorrect, 'points_earned' => $pointsEarned, 'answered_at' => now()]
+            );
+            $totalPoints += $question->points;
+            $earnedPoints += $pointsEarned;
+            if ($isCorrect) $totalCorrect++;
+        }
+
+        $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 10, 2) : 0;
+        $attempt->update(['submitted_at' => now(), 'score' => $score, 'total_correct' => $totalCorrect, 'status' => 'graded']);
+        return $this->success(['score' => $score, 'total_correct' => $totalCorrect], 'Nộp bài thành công');
+    }
+
+    public function result(Request $request, Exam $exam)
+    {
+        $this->checkAccess($request, $exam);
+        $attempt = $exam->attempts()->with('answers.question')->where('student_id', $request->user()->id)->whereNotNull('submitted_at')->latest()->firstOrFail();
+        return $this->success(new ExamAttemptResource($attempt));
+    }
+
+    private function checkAccess(Request $request, Exam $exam): void
+    {
+        $classroomIds = $request->user()->classrooms()->pluck('classrooms.id');
+        abort_unless($classroomIds->contains($exam->classroom_id), 403, 'Không có quyền truy cập');
+    }
+}

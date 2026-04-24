@@ -1,0 +1,20 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void {
+        Schema::create('breakout_room_members', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('breakout_room_id')->constrained('breakout_rooms')->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
+            $table->dateTime('assigned_at')->nullable();
+            $table->dateTime('joined_at')->nullable();
+            $table->dateTime('left_at')->nullable();
+            $table->timestamps();
+        });
+    }
+    public function down(): void { Schema::dropIfExists('breakout_room_members'); }
+};
