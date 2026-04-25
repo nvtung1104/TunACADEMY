@@ -3,8 +3,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class LiveParticipant extends Model
 {
-    protected $fillable = ['live_session_id', 'user_id', 'joined_at', 'left_at', 'is_muted', 'is_cam_off', 'is_hand_raised'];
-    protected $casts = ['joined_at' => 'datetime', 'left_at' => 'datetime', 'is_muted' => 'boolean', 'is_cam_off' => 'boolean', 'is_hand_raised' => 'boolean'];
+    protected $fillable = ['session_id', 'user_id', 'role', 'joined_at', 'left_at', 'total_time_seconds', 'mic_enabled', 'cam_enabled', 'is_present', 'device_info'];
+    protected $casts = ['joined_at' => 'datetime', 'left_at' => 'datetime', 'mic_enabled' => 'boolean', 'cam_enabled' => 'boolean', 'is_present' => 'boolean', 'device_info' => 'array'];
     public function liveSession() { return $this->belongsTo(LiveSession::class); }
     public function user()        { return $this->belongsTo(User::class); }
 }

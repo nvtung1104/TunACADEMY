@@ -12,7 +12,7 @@ class StudyProgressSeeder extends Seeder
     public function run(): void
     {
         $lesson = Lesson::first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $index => $student) {
             StudyProgress::updateOrCreate(

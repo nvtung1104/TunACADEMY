@@ -13,7 +13,7 @@ class AssignmentSubmissionSeeder extends Seeder
     {
         $assignment = Assignment::first();
         $teacher = User::where('email', 'teacher1@tunacademy.com')->first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $index => $student) {
             AssignmentSubmission::updateOrCreate(

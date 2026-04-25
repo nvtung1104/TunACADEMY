@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\ClassroomController as AdminClassroomController;
+use App\Http\Controllers\Api\Admin\SchoolYearController;
+use App\Http\Controllers\Api\Admin\GradeController;
+use App\Http\Controllers\Api\Admin\SubjectController;
 use App\Http\Controllers\Api\Admin\ReportController;
 use App\Http\Controllers\Api\Teacher\ClassroomController as TeacherClassroomController;
 use App\Http\Controllers\Api\Teacher\LessonController;
@@ -79,6 +82,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus']);
 
         Route::apiResource('classrooms', AdminClassroomController::class);
+        Route::post('classrooms/{classroom}/students', [AdminClassroomController::class, 'addStudent']);
+        Route::delete('classrooms/{classroom}/students/{student}', [AdminClassroomController::class, 'removeStudent']);
+
+        Route::apiResource('school-years', SchoolYearController::class);
+
+        Route::get('grades', [GradeController::class, 'index']);
+        Route::get('grades/{grade}', [GradeController::class, 'show']);
+
+        Route::apiResource('subjects', SubjectController::class);
 
         Route::prefix('reports')->group(function () {
             Route::get('/overview', [ReportController::class, 'overview']);
@@ -98,6 +110,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('lessons', LessonController::class);
         Route::post('lessons/{lesson}/publish', [LessonController::class, 'publish']);
+        Route::post('lessons/{lesson}/materials', [LessonController::class, 'storeMaterial']);
+        Route::delete('lessons/{lesson}/materials/{material}', [LessonController::class, 'destroyMaterial']);
 
         Route::apiResource('exams', TeacherExamController::class);
         Route::post('exams/{exam}/questions', [TeacherExamController::class, 'storeQuestion']);
@@ -106,6 +120,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('exams/{exam}/publish', [TeacherExamController::class, 'publish']);
         Route::get('exams/{exam}/results', [TeacherExamController::class, 'results']);
         Route::get('exams/{exam}/results/{student}', [TeacherExamController::class, 'studentResult']);
+        Route::get('exams/{exam}/attempts', [TeacherExamController::class, 'attempts']);
+        Route::get('exams/{exam}/attempts/{attempt}/logs', [TeacherExamController::class, 'attemptLogs']);
 
         Route::apiResource('assignments', TeacherAssignmentController::class);
         Route::get('assignments/{assignment}/submissions', [TeacherAssignmentController::class, 'submissions']);
@@ -132,6 +148,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('exams/{exam}/start', [StudentExamController::class, 'start']);
         Route::post('exams/{exam}/submit', [StudentExamController::class, 'submit']);
         Route::get('exams/{exam}/result', [StudentExamController::class, 'result']);
+        Route::post('exams/{exam}/attempts/{attempt}/proctoring', [StudentExamController::class, 'logViolation']);
 
         Route::get('assignments', [StudentAssignmentController::class, 'index']);
         Route::get('assignments/{assignment}', [StudentAssignmentController::class, 'show']);

@@ -13,11 +13,11 @@ class ClassroomSubjectTeacherSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::whereHas('role', fn($q) => $q->where('name', 'admin'))->first();
+        $admin = User::role('admin')->first();
         $schoolYear = SchoolYear::where('status', 'active')->first();
 
         $classroom = Classroom::where('name', '10A1')->first();
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))->get()->values();
+        $teachers = User::role('teacher')->get()->values();
 
         $assignments = [
             ['subject_code' => 'MATH', 'teacher_index' => 0],

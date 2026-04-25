@@ -13,7 +13,7 @@ class ClassroomSeeder extends Seeder
     public function run(): void
     {
         $schoolYear = SchoolYear::where('status', 'active')->first();
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))->get()->values();
+        $teachers = User::role('teacher')->get()->values();
 
         $items = [
             ['name' => '10A1', 'grade_level' => 10, 'teacher_index' => 0],

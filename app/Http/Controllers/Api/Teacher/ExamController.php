@@ -5,7 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreExamRequest;
 use App\Http\Requests\Teacher\StoreQuestionRequest;
 use App\Http\Resources\Exam\{ExamResource, ExamAttemptResource};
-use App\Models\{Exam, ExamQuestion, ExamAttempt};
+use App\Models\{Exam, ExamAttempt, ExamQuestion};
 use Illuminate\Http\Request;
 
 class ExamController extends Controller
@@ -85,7 +85,40 @@ class ExamController extends Controller
     {
         $this->gate($request, $exam);
         $attempt = $exam->attempts()->with(['student', 'answers.question'])->where('student_id', $student)->latest()->firstOrFail();
+
         return $this->success(new ExamAttemptResource($attempt));
+    }
+
+    public function attempts(Request $request, Exam $exam)
+    {
+        $this->gate($request, $exam);
+
+        $attempts = $exam->attempts()
+            ->with('student')
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->latest('started_at')
+            ->paginate(30);
+
+        return ExamAttemptResource::collection($attempts);
+    }
+
+    public function attemptLogs(Request $request, Exam $exam, ExamAttempt $attempt)
+    {
+        $this->gate($request, $exam);
+        abort_unless($attempt->exam_id === $exam->id, 404, 'Không tìm thấy bài làm');
+
+        $logs = $attempt->proctoringLogs()->orderBy('occurred_at')->get()->map(fn($log) => [
+            'id'              => $log->id,
+            'event_type'      => $log->event_type,
+            'description'     => $log->description,
+            'screenshot_path' => $log->screenshot_path ? asset('storage/' . $log->screenshot_path) : null,
+            'occurred_at'     => $log->occurred_at,
+        ]);
+
+        return $this->success([
+            'attempt' => new ExamAttemptResource($attempt->load('student')),
+            'logs'    => $logs,
+        ]);
     }
 
     private function gate(Request $request, Exam $exam): void

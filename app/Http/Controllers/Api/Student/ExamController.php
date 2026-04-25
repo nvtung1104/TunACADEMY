@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Exam\{ExamResource, ExamAttemptResource};
-use App\Models\{Exam, ExamAttempt, StudentAnswer};
+use App\Models\{Exam, ExamAttempt, ProctoringLog, StudentAnswer};
 use Illuminate\Http\Request;
 
 class ExamController extends Controller
@@ -93,6 +93,34 @@ class ExamController extends Controller
         $this->checkAccess($request, $exam);
         $attempt = $exam->attempts()->with('answers.question')->where('student_id', $request->user()->id)->whereNotNull('submitted_at')->latest()->firstOrFail();
         return $this->success(new ExamAttemptResource($attempt));
+    }
+
+    public function logViolation(Request $request, Exam $exam, ExamAttempt $attempt)
+    {
+        abort_unless($attempt->exam_id === $exam->id && $attempt->student_id === $request->user()->id, 403, 'Không có quyền');
+        abort_unless($attempt->status === 'in_progress', 422, 'Bài thi đã kết thúc');
+
+        $request->validate([
+            'event_type'  => 'required|string|max:50',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        ProctoringLog::create([
+            'attempt_id'  => $attempt->id,
+            'student_id'  => $request->user()->id,
+            'event_type'  => $request->event_type,
+            'description' => $request->description,
+            'occurred_at' => now(),
+        ]);
+
+        $attempt->increment('violation_count');
+
+        if ($exam->proctoring_enabled && $exam->max_violations > 0 && $attempt->fresh()->violation_count >= $exam->max_violations) {
+            $attempt->update(['status' => 'submitted', 'submitted_at' => now()]);
+            return $this->error('Bài thi đã bị kết thúc do vi phạm quy định', [], 422);
+        }
+
+        return $this->success(['violation_count' => $attempt->fresh()->violation_count], 'Đã ghi nhận vi phạm');
     }
 
     private function checkAccess(Request $request, Exam $exam): void

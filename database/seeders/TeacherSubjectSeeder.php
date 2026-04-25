@@ -11,8 +11,8 @@ class TeacherSubjectSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::whereHas('role', fn($q) => $q->where('name', 'admin'))->first();
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))->get()->values();
+        $admin = User::role('admin')->first();
+        $teachers = User::role('teacher')->get()->values();
 
         $map = [
             0 => ['MATH', 'PHYSICS'],
