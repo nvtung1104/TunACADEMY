@@ -99,6 +99,16 @@ class LessonController extends Controller
         return $this->success(null, 'Đã xóa tài liệu');
     }
 
+    public function uploadThumbnail(Request $request, Lesson $lesson)
+    {
+        $this->gate($request, $lesson);
+        $request->validate(['thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        if ($lesson->thumbnail) Storage::disk('public')->delete($lesson->thumbnail);
+        $path = $request->file('thumbnail')->store('thumbnails/lessons', 'public');
+        $lesson->update(['thumbnail' => $path]);
+        return $this->success(['thumbnail_url' => asset("storage/{$path}")], 'Cập nhật ảnh bìa thành công');
+    }
+
     private function gate(Request $request, Lesson $lesson): void
     {
         abort_unless($lesson->teacher_id === $request->user()->id, 403, 'Không có quyền');

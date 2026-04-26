@@ -60,12 +60,16 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $data = $request->validate([
-            'name'          => 'sometimes|string|max:255',
-            'phone'         => 'sometimes|nullable|string|max:20',
-            'date_of_birth' => 'sometimes|nullable|date',
-            'gender'        => 'sometimes|nullable|in:male,female,other',
-            'address'       => 'sometimes|nullable|string',
-            'qualification' => 'sometimes|nullable|string|max:100',
+            'name'           => 'sometimes|string|max:255',
+            'phone'          => 'sometimes|nullable|string|max:20',
+            'date_of_birth'  => 'sometimes|nullable|date',
+            'gender'         => 'sometimes|nullable|in:male,female,other',
+            'frame'          => 'sometimes|nullable|in:none,male,female',
+            'address'        => 'sometimes|nullable|string',
+            'qualification'  => 'sometimes|nullable|string|max:100',
+            'parent_name'    => 'sometimes|nullable|string|max:255',
+            'parent_phone'   => 'sometimes|nullable|string|max:20',
+            'parent_address' => 'sometimes|nullable|string',
         ]);
         $request->user()->update($data);
         return $this->success(new UserResource($request->user()->fresh()), 'Cập nhật thành công');

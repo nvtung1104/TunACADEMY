@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSubjectRequest;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SubjectController extends Controller
 {
@@ -49,5 +50,14 @@ class SubjectController extends Controller
         $subject->delete();
 
         return $this->success(null, 'Xóa môn học thành công');
+    }
+
+    public function uploadAvatar(Request $request, Subject $subject)
+    {
+        $request->validate(['avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        if ($subject->avatar) Storage::disk('public')->delete($subject->avatar);
+        $path = $request->file('avatar')->store('subjects', 'public');
+        $subject->update(['avatar' => $path]);
+        return $this->success(['avatar_url' => asset("storage/{$path}")], 'Cập nhật ảnh thành công');
     }
 }

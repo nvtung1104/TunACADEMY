@@ -3,7 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Classroom extends Model
 {
-    protected $fillable = ['name', 'grade_id', 'school_year_id', 'homeroom_teacher_id', 'max_students', 'status'];
+    protected $fillable = ['name', 'grade_id', 'school_year_id', 'homeroom_teacher_id', 'max_students', 'status', 'cover_image'];
     public function grade()           { return $this->belongsTo(Grade::class); }
     public function schoolYear()      { return $this->belongsTo(SchoolYear::class); }
     public function homeroomTeacher() { return $this->belongsTo(User::class, 'homeroom_teacher_id'); }

@@ -5,19 +5,19 @@
 
     <!-- Sidebar -->
     <aside
-      class="fixed md:relative z-30 flex flex-col w-64 h-full shrink-0 bg-[#1e1b4b] text-white transition-transform duration-300"
+      class="fixed md:relative z-30 flex flex-col w-64 h-full shrink-0 bg-[#0d0c22] text-white transition-transform duration-300"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
     >
       <!-- Logo -->
       <div class="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-        <div class="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-[#d63015] flex items-center justify-center shrink-0">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
           </svg>
         </div>
         <div>
           <span class="font-bold text-base tracking-wide">TunAcademy</span>
-          <span class="block text-[10px] text-indigo-300 font-medium uppercase tracking-widest">{{ roleBadge }}</span>
+          <span class="block text-[10px] text-[#d63015] font-medium uppercase tracking-widest">{{ roleBadge }}</span>
         </div>
       </div>
 
@@ -29,31 +29,70 @@
           :to="item.path"
           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
           :class="isActive(item.path)
-            ? 'bg-indigo-500/90 text-white shadow-sm'
-            : 'text-indigo-200/80 hover:bg-white/8 hover:text-white'"
+            ? 'bg-[#d63015]/90 text-white shadow-sm'
+            : 'text-white/70 hover:bg-white/8 hover:text-white'"
           @click="sidebarOpen = false"
         >
           <span class="w-5 h-5 shrink-0" v-html="item.icon"></span>
           <span>{{ item.label }}</span>
-          <span v-if="item.badge" class="ml-auto text-[10px] font-semibold bg-indigo-400/30 text-indigo-200 px-1.5 py-0.5 rounded-full">
+          <span v-if="item.badge" class="ml-auto text-[10px] font-semibold bg-[#d63015]/30 text-red-200 px-1.5 py-0.5 rounded-full">
             {{ item.badge }}
           </span>
         </RouterLink>
       </nav>
 
+      <!-- Bottom links -->
+      <div class="px-3 pb-2 border-t border-white/10 pt-2 space-y-0.5">
+        <RouterLink
+          to="/saved"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="isActive('/saved')
+            ? 'bg-[#d63015]/90 text-white shadow-sm'
+            : 'text-[#d63015]/70 hover:bg-white/8 hover:text-white'"
+          @click="sidebarOpen = false"
+        >
+          <span class="w-5 h-5 shrink-0" v-html="icons.bookmark" />
+          <span>Đã lưu</span>
+        </RouterLink>
+        <RouterLink
+          to="/profile"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="isActive('/profile')
+            ? 'bg-[#d63015]/90 text-white shadow-sm'
+            : 'text-[#d63015]/70 hover:bg-white/8 hover:text-white'"
+          @click="sidebarOpen = false"
+        >
+          <span class="w-5 h-5 shrink-0" v-html="icons.userCircle" />
+          <span>Tài khoản</span>
+        </RouterLink>
+        <RouterLink
+          to="/"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#d63015]/70 hover:bg-white/8 hover:text-white transition-all duration-150"
+          @click="sidebarOpen = false"
+        >
+          <span class="w-5 h-5 shrink-0" v-html="icons.home" />
+          <span>Trang chủ</span>
+        </RouterLink>
+      </div>
+
       <!-- User profile -->
       <div class="px-3 py-3 border-t border-white/10">
         <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/8 transition-colors group">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center font-semibold text-sm uppercase shrink-0">
-            {{ auth.user?.name?.charAt(0) }}
-          </div>
+          <AvatarFrame
+            :src="auth.user?.avatar"
+            :name="auth.user?.name"
+            :gender="auth.user?.gender"
+            :frame="auth.user?.frame"
+            :size="32"
+            class="shrink-0"
+          />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-white truncate leading-tight">{{ auth.user?.name }}</p>
-            <p class="text-[11px] text-indigo-300 truncate">{{ auth.user?.email }}</p>
+            <p class="text-[11px] text-[#d63015] truncate">{{ auth.user?.email }}</p>
           </div>
           <button
             @click="handleLogout"
-            class="p-1.5 rounded-lg text-indigo-400 hover:text-white hover:bg-white/15 transition-colors opacity-0 group-hover:opacity-100"
+            class="p-1.5 rounded-lg text-[#d63015]/70 hover:text-white hover:bg-white/15 transition-colors opacity-0 group-hover:opacity-100"
             title="Đăng xuất"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,15 +123,15 @@
           <!-- Notification bell -->
           <NotificationBell />
 
-          <!-- Change password -->
+          <!-- Profile -->
           <RouterLink
-            to="/change-password"
-            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-medium"
+            to="/profile"
+            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-[#d63015] hover:bg-red-50 transition-colors font-medium"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Đổi mật khẩu
+            Tài khoản
           </RouterLink>
 
           <!-- Logout -->
@@ -104,6 +143,9 @@
           </button>
         </div>
       </header>
+
+      <!-- Help Widget -->
+      <HelpWidget />
 
       <!-- Content -->
       <main class="flex-1 overflow-y-auto p-5">
@@ -119,7 +161,9 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@stores/auth'
+import AvatarFrame from '@components/common/AvatarFrame.vue'
 import NotificationBell from '@components/common/NotificationBell.vue'
+import HelpWidget from '@components/common/HelpWidget.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -140,6 +184,9 @@ const icons = {
   video: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`,
   trending: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>`,
   subject: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>`,
+  home: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+  userCircle: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+  bookmark: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`,
 }
 
 const adminNav = [
@@ -148,11 +195,16 @@ const adminNav = [
   { path: '/admin/classrooms', label: 'Lớp học', icon: icons.classroom },
   { path: '/admin/school-years', label: 'Năm học', icon: icons.calendar },
   { path: '/admin/subjects', label: 'Môn học', icon: icons.subject },
+  { path: '/admin/lessons', label: 'Bài học', icon: icons.book },
+  { path: '/admin/exams', label: 'Đề thi', icon: icons.clipboard },
+  { path: '/admin/assignments', label: 'Bài tập', icon: icons.pencil },
+  { path: '/admin/live', label: 'Phòng trực tuyến', icon: icons.video },
   { path: '/admin/reports', label: 'Báo cáo', icon: icons.chart },
 ]
 
 const teacherNav = [
   { path: '/teacher/dashboard', label: 'Tổng quan', icon: icons.dashboard },
+  { path: '/teacher/homeroom', label: 'Lớp chủ nhiệm', icon: icons.classroom },
   { path: '/teacher/lessons', label: 'Bài học', icon: icons.book },
   { path: '/teacher/exams', label: 'Bài kiểm tra', icon: icons.clipboard },
   { path: '/teacher/assignments', label: 'Bài tập', icon: icons.pencil },
@@ -163,8 +215,10 @@ const teacherNav = [
 const studentNav = [
   { path: '/student/dashboard', label: 'Tổng quan', icon: icons.dashboard },
   { path: '/student/classes', label: 'Lớp học', icon: icons.classroom },
+  { path: '/student/lessons', label: 'Bài học', icon: icons.book },
   { path: '/student/exams', label: 'Bài kiểm tra', icon: icons.clipboard },
   { path: '/student/assignments', label: 'Bài tập', icon: icons.pencil },
+  { path: '/student/live', label: 'Phòng trực tuyến', icon: icons.video },
   { path: '/student/progress', label: 'Kết quả học tập', icon: icons.trending },
 ]
 
@@ -186,8 +240,13 @@ const pageMeta = {
   '/admin/classrooms':   { title: 'Quản lý lớp học',     subtitle: 'Tổ chức và quản lý lớp' },
   '/admin/school-years': { title: 'Năm học',             subtitle: 'Chu kỳ học tập' },
   '/admin/subjects':     { title: 'Môn học',             subtitle: 'Danh sách môn học' },
+  '/admin/lessons':      { title: 'Bài học',             subtitle: 'Quản lý tất cả bài học' },
+  '/admin/exams':        { title: 'Đề thi',              subtitle: 'Quản lý tất cả đề thi' },
+  '/admin/assignments':  { title: 'Bài tập',             subtitle: 'Quản lý tất cả bài tập' },
+  '/admin/live':         { title: 'Phòng trực tuyến',    subtitle: 'Quản lý phòng học trực tuyến' },
   '/admin/reports':      { title: 'Báo cáo',             subtitle: 'Thống kê và xuất dữ liệu' },
   '/teacher/dashboard':  { title: 'Tổng quan',           subtitle: 'Hoạt động giảng dạy' },
+  '/teacher/homeroom':   { title: 'Lớp chủ nhiệm',       subtitle: 'Thông tin lớp bạn phụ trách' },
   '/teacher/lessons':    { title: 'Bài học',             subtitle: 'Quản lý nội dung bài học' },
   '/teacher/exams':      { title: 'Bài kiểm tra',        subtitle: 'Tạo và quản lý đề thi' },
   '/teacher/assignments':{ title: 'Bài tập',             subtitle: 'Giao và chấm bài tập' },
@@ -195,10 +254,13 @@ const pageMeta = {
   '/teacher/live':       { title: 'Học trực tuyến',      subtitle: 'Phòng học trực tiếp' },
   '/student/dashboard':  { title: 'Trang chủ',           subtitle: 'Chào mừng bạn trở lại' },
   '/student/classes':    { title: 'Lớp học',             subtitle: 'Các lớp đang tham gia' },
+  '/student/lessons':    { title: 'Bài học',             subtitle: 'Bài học từ các lớp của bạn' },
   '/student/exams':      { title: 'Bài kiểm tra',        subtitle: 'Danh sách bài kiểm tra' },
   '/student/assignments':{ title: 'Bài tập',             subtitle: 'Bài tập được giao' },
+  '/student/live':       { title: 'Phòng trực tuyến',    subtitle: 'Các phòng học trực tuyến' },
   '/student/progress':   { title: 'Kết quả học tập',     subtitle: 'Thành tích và tiến độ' },
-  '/change-password':    { title: 'Đổi mật khẩu',        subtitle: 'Bảo mật tài khoản' },
+  '/profile':            { title: 'Tài khoản',           subtitle: 'Thông tin cá nhân & bảo mật' },
+  '/saved':              { title: 'Đã lưu',              subtitle: 'Bài học, đề thi, bài tập đã lưu' },
 }
 
 const currentMeta = computed(() => {

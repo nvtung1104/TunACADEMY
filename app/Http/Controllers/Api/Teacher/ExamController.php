@@ -121,6 +121,16 @@ class ExamController extends Controller
         ]);
     }
 
+    public function uploadThumbnail(Request $request, Exam $exam)
+    {
+        $this->gate($request, $exam);
+        $request->validate(['thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        if ($exam->thumbnail) \Illuminate\Support\Facades\Storage::disk('public')->delete($exam->thumbnail);
+        $path = $request->file('thumbnail')->store('thumbnails/exams', 'public');
+        $exam->update(['thumbnail' => $path]);
+        return $this->success(['thumbnail_url' => asset("storage/{$path}")], 'Cập nhật ảnh bìa thành công');
+    }
+
     private function gate(Request $request, Exam $exam): void
     {
         abort_unless($exam->teacher_id === $request->user()->id, 403, 'Không có quyền');
