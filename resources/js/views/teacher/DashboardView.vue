@@ -23,7 +23,7 @@
           <RouterLink to="/teacher/exams" class="text-xs text-indigo-600 hover:underline font-medium">Xem tất cả</RouterLink>
         </div>
         <div class="divide-y divide-gray-50">
-          <div v-if="recentResults.length === 0" class="py-10 text-center text-gray-400 text-sm">
+          <div v-if="recentResults.length === 0 && !loading" class="py-10 text-center text-gray-400 text-sm">
             Chưa có kết quả kiểm tra
           </div>
           <div v-for="r in recentResults.slice(0, 6)" :key="r.id" class="px-6 py-3 flex items-center gap-3">
@@ -44,22 +44,76 @@
         </div>
       </div>
 
-      <!-- Quick actions -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="px-5 py-4 border-b border-gray-100">
-          <h3 class="font-semibold text-gray-800">Thao tác nhanh</h3>
-        </div>
-        <div class="p-4 space-y-2">
-          <RouterLink v-for="action in quickActions" :key="action.to" :to="action.to"
-            class="flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 transition-colors group">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" :class="action.bg">
-              <span class="w-4 h-4" :class="action.color" v-html="action.icon"></span>
+      <!-- Right column -->
+      <div class="flex flex-col gap-5">
+        <!-- My subjects -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm flex-1">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Môn dạy của tôi</h3>
+            <span class="text-xs text-gray-400">{{ mySubjects.length }} môn</span>
+          </div>
+
+          <!-- Skeleton -->
+          <div v-if="loading" class="p-4 space-y-3">
+            <div v-for="i in 3" :key="i" class="animate-pulse flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-gray-200 shrink-0" />
+              <div class="flex-1">
+                <div class="h-3.5 bg-gray-200 rounded w-2/3 mb-2" />
+                <div class="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
             </div>
-            <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">{{ action.label }}</span>
-            <svg class="w-4 h-4 text-gray-300 ml-auto group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </RouterLink>
+          </div>
+
+          <!-- Empty -->
+          <div v-else-if="mySubjects.length === 0" class="py-8 text-center">
+            <div class="text-3xl mb-2">📚</div>
+            <p class="text-sm text-gray-400">Chưa được phân công môn dạy</p>
+          </div>
+
+          <!-- Subject list -->
+          <div v-else class="p-3 space-y-2">
+            <div v-for="item in mySubjects" :key="item.subject.id"
+              class="rounded-xl border border-gray-100 overflow-hidden">
+              <!-- Subject header -->
+              <div class="flex items-center gap-3 px-3 py-2.5">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold"
+                  :style="{ backgroundColor: item.subject.color || '#6366f1' }">
+                  {{ item.subject.icon || item.subject.name?.[0] }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-gray-800 truncate">{{ item.subject.name }}</p>
+                  <p class="text-xs text-gray-400">{{ item.classrooms.length }} lớp</p>
+                </div>
+              </div>
+              <!-- Classrooms -->
+              <div class="bg-gray-50 px-3 py-2 flex flex-wrap gap-1.5">
+                <span v-for="cls in item.classrooms" :key="cls.id"
+                  class="inline-flex items-center text-xs px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-600">
+                  {{ cls.name }}
+                  <span v-if="cls.grade" class="ml-1 text-gray-400">({{ cls.grade }})</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div class="px-5 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-800">Thao tác nhanh</h3>
+          </div>
+          <div class="p-3 space-y-1">
+            <RouterLink v-for="action in quickActions" :key="action.to" :to="action.to"
+              class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-indigo-50 transition-colors group">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" :class="action.bg">
+                <span class="w-4 h-4" :class="action.color" v-html="action.icon"></span>
+              </div>
+              <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">{{ action.label }}</span>
+              <svg class="w-4 h-4 text-gray-300 ml-auto group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </RouterLink>
+          </div>
         </div>
       </div>
     </div>
@@ -68,10 +122,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import api from '@api/axios'
 
 const loading = ref(true)
 const recentResults = ref([])
+const mySubjects = ref([])
 
 const iconBook = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`
 const iconClip = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`
@@ -101,10 +157,11 @@ function formatDate(iso) {
 
 onMounted(async () => {
   try {
-    const [classRes, lessonRes, examRes] = await Promise.all([
+    const [classRes, lessonRes, examRes, subjectRes] = await Promise.all([
       api.get('/teacher/classrooms'),
       api.get('/teacher/lessons', { params: { per_page: 1 } }),
       api.get('/teacher/exams'),
+      api.get('/teacher/my-subjects'),
     ])
 
     const classrooms = classRes.data.data?.data ?? classRes.data.data ?? []
@@ -114,7 +171,8 @@ onMounted(async () => {
     const exams = examRes.data.data?.data ?? examRes.data.data ?? []
     stats.value[3].value = Array.isArray(exams) ? exams.length : 0
 
-    // Fetch recent results from first exam if available
+    mySubjects.value = subjectRes.data.data ?? []
+
     if (exams.length > 0) {
       try {
         const results = await api.get(`/teacher/exams/${exams[0].id}/attempts`)

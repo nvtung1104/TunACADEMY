@@ -78,7 +78,8 @@
     <AppModal v-model="submitModal" :title="`Nộp bài: ${selectedAssignment?.title ?? ''}`" size="md">
       <div class="space-y-4">
         <p class="text-sm text-gray-600">Nhập câu trả lời hoặc mô tả bài làm của bạn:</p>
-        <textarea v-model="submitContent" class="input resize-none w-full" rows="5" placeholder="Nhập nội dung bài làm..."></textarea>
+        <textarea v-model="submitContent" rows="5" placeholder="Nhập nội dung bài làm..."
+          class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
         <div v-if="submitError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ submitError }}</div>
       </div>
       <template #footer>
@@ -155,6 +156,3 @@ async function fetch() {
 onMounted(fetch)
 </script>
 
-<style scoped>
-.input { @apply px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm; }
-</style>

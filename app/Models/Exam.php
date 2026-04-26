@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 class Exam extends Model
 {
     protected $fillable = [
-        'classroom_id', 'subject_id', 'teacher_id', 'title', 'description',
+        'classroom_id', 'subject_id', 'teacher_id', 'title', 'thumbnail', 'description',
         'duration_minutes', 'opened_at', 'closed_at',
         'shuffle_questions', 'shuffle_options', 'proctoring_enabled', 'max_violations',
         'show_result', 'allow_retake', 'status',

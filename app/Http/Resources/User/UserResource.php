@@ -14,10 +14,15 @@ class UserResource extends JsonResource
             'phone'         => $this->phone,
             'avatar'        => $this->avatar ? asset('storage/' . $this->avatar) : null,
             'gender'        => $this->gender,
+            'frame'         => $this->frame,
             'date_of_birth' => $this->date_of_birth?->toDateString(),
-            'qualification' => $this->qualification,
-            'status'        => $this->status,
-            'roles'         => $this->whenLoaded('roles', fn() => $this->roles->pluck('name')),
+            'address'       => $this->address,
+            'qualification'  => $this->qualification,
+            'parent_name'    => $this->parent_name,
+            'parent_phone'   => $this->parent_phone,
+            'parent_address' => $this->parent_address,
+            'status'         => $this->status,
+            'roles'          => $this->whenLoaded('roles', fn() => $this->roles->pluck('name')),
         ];
     }
 }

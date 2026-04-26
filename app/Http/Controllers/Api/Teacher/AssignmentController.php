@@ -66,6 +66,16 @@ class AssignmentController extends Controller
         return $this->success($submission->fresh(), 'Chấm điểm thành công');
     }
 
+    public function uploadThumbnail(Request $request, Assignment $assignment)
+    {
+        $this->gate($request, $assignment);
+        $request->validate(['thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        if ($assignment->thumbnail) \Illuminate\Support\Facades\Storage::disk('public')->delete($assignment->thumbnail);
+        $path = $request->file('thumbnail')->store('thumbnails/assignments', 'public');
+        $assignment->update(['thumbnail' => $path]);
+        return $this->success(['thumbnail_url' => asset("storage/{$path}")], 'Cập nhật ảnh bìa thành công');
+    }
+
     private function gate(Request $request, Assignment $assignment): void
     {
         abort_unless($assignment->teacher_id === $request->user()->id, 403, 'Không có quyền');

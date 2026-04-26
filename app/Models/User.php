@@ -21,6 +21,7 @@ class User extends Authenticatable
         'phone',
         'date_of_birth',
         'gender',
+        'frame',
         'address',
         'qualification',
         'parent_name',
@@ -190,6 +191,8 @@ class User extends Authenticatable
     {
         return $this->avatar ? asset("storage/{$this->avatar}") : null;
     }
+
+    public function bookmarks(): HasMany { return $this->hasMany(Bookmark::class); }
 
     public function isAdmin(): bool    { return $this->hasRole('admin'); }
     public function isTeacher(): bool  { return $this->hasRole('teacher'); }

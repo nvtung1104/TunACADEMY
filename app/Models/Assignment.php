@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 class Assignment extends Model
 {
     protected $fillable = [
-        'classroom_id', 'subject_id', 'teacher_id', 'title', 'description', 'type',
+        'classroom_id', 'subject_id', 'teacher_id', 'title', 'thumbnail', 'description', 'type',
         'deadline', 'max_score', 'allow_late', 'attachment_paths', 'status',
     ];
     protected $casts = ['deadline' => 'datetime', 'allow_late' => 'boolean', 'attachment_paths' => 'array'];

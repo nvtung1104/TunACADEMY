@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 class Lesson extends Model
 {
     protected $fillable = [
-        'classroom_id', 'subject_id', 'teacher_id', 'title', 'description',
+        'classroom_id', 'subject_id', 'teacher_id', 'title', 'thumbnail', 'description',
         'content', 'video_path', 'audio_path', 'order_index', 'view_count', 'status', 'published_at',
     ];
     protected $casts = ['published_at' => 'datetime'];

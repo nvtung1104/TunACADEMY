@@ -6,6 +6,7 @@ use App\Http\Requests\Admin\StoreClassroomRequest;
 use App\Http\Resources\Classroom\ClassroomResource;
 use App\Models\{Classroom, User};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClassroomController extends Controller
 {
@@ -74,5 +75,14 @@ class ClassroomController extends Controller
         $classroom->students()->updateExistingPivot($student, ['status' => 'inactive', 'left_at' => now()]);
 
         return $this->success(null, 'Đã xóa học sinh khỏi lớp');
+    }
+
+    public function uploadCover(Request $request, Classroom $classroom)
+    {
+        $request->validate(['cover_image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        if ($classroom->cover_image) Storage::disk('public')->delete($classroom->cover_image);
+        $path = $request->file('cover_image')->store('classrooms', 'public');
+        $classroom->update(['cover_image' => $path]);
+        return $this->success(['cover_url' => asset("storage/{$path}")], 'Cập nhật ảnh bìa thành công');
     }
 }

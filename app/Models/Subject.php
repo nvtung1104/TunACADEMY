@@ -3,7 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Subject extends Model
 {
-    protected $fillable = ['name', 'code', 'color', 'icon', 'applicable_grades', 'status'];
+    protected $fillable = ['name', 'code', 'color', 'icon', 'avatar', 'applicable_grades', 'status'];
     protected $casts = ['applicable_grades' => 'array'];
     public function teachers()
     {
