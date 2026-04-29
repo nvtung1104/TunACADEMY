@@ -93,9 +93,9 @@
         <div class="space-y-4">
           <!-- CTA card -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
-            <!-- Student: go to their lesson page -->
+            <!-- Student: go to learn page -->
             <template v-if="auth.isStudent">
-              <RouterLink :to="`/student/lessons/${route.params.id}`"
+              <RouterLink :to="`/student/lessons/${route.params.id}/learn`"
                 class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
@@ -106,7 +106,7 @@
             </template>
             <!-- Not logged in: go to login -->
             <template v-else-if="!auth.isLoggedIn">
-              <RouterLink :to="`/login?redirect=/student/lessons/${route.params.id}`"
+              <RouterLink :to="`/login?redirect=/student/lessons/${route.params.id}/learn`"
                 class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
                 Đăng nhập để học
               </RouterLink>

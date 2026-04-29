@@ -17,9 +17,7 @@ class RoleAccess
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $userRole = $request->user()->role->name ?? null;
-
-        if (!in_array($userRole, $roles)) {
+        if (!$request->user()->hasAnyRole($roles)) {
             return response()->json(['message' => 'Unauthorized. Access denied.'], 403);
         }
 

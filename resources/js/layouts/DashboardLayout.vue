@@ -10,11 +10,7 @@
     >
       <!-- Logo -->
       <div class="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-        <div class="w-9 h-9 rounded-xl bg-[#d63015] flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
-        </div>
+        <img src="/images/logo.png" alt="TunAcademy" class="w-9 h-9 rounded-xl object-contain shrink-0" />
         <div>
           <span class="font-bold text-base tracking-wide">TunAcademy</span>
           <span class="block text-[10px] text-[#d63015] font-medium uppercase tracking-widest">{{ roleBadge }}</span>
@@ -187,6 +183,7 @@ const icons = {
   home: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
   userCircle: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
   bookmark: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`,
+  database: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3zm0 0v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7m-16 5v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5"/></svg>`,
 }
 
 const adminNav = [
@@ -208,8 +205,9 @@ const teacherNav = [
   { path: '/teacher/lessons', label: 'Bài học', icon: icons.book },
   { path: '/teacher/exams', label: 'Bài kiểm tra', icon: icons.clipboard },
   { path: '/teacher/assignments', label: 'Bài tập', icon: icons.pencil },
+  { path: '/teacher/live', label: 'Phòng trực tuyến', icon: icons.video },
   { path: '/teacher/grades', label: 'Điểm số', icon: icons.star },
-  { path: '/teacher/live', label: 'Học trực tuyến', icon: icons.video },
+  { path: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: icons.database },
 ]
 
 const studentNav = [
@@ -250,11 +248,13 @@ const pageMeta = {
   '/teacher/lessons':    { title: 'Bài học',             subtitle: 'Quản lý nội dung bài học' },
   '/teacher/exams':      { title: 'Bài kiểm tra',        subtitle: 'Tạo và quản lý đề thi' },
   '/teacher/assignments':{ title: 'Bài tập',             subtitle: 'Giao và chấm bài tập' },
-  '/teacher/grades':     { title: 'Điểm số',             subtitle: 'Kết quả học tập' },
-  '/teacher/live':       { title: 'Học trực tuyến',      subtitle: 'Phòng học trực tiếp' },
+  '/teacher/live':          { title: 'Phòng trực tuyến',    subtitle: 'Mở phòng học cho lớp của bạn' },
+  '/teacher/grades':        { title: 'Điểm số',             subtitle: 'Kết quả học tập' },
+  '/teacher/question-bank': { title: 'Ngân hàng câu hỏi',  subtitle: 'Câu hỏi cho bài kiểm tra' },
   '/student/dashboard':  { title: 'Trang chủ',           subtitle: 'Chào mừng bạn trở lại' },
   '/student/classes':    { title: 'Lớp học',             subtitle: 'Các lớp đang tham gia' },
-  '/student/lessons':    { title: 'Bài học',             subtitle: 'Bài học từ các lớp của bạn' },
+  '/student/lessons':          { title: 'Bài học',          subtitle: 'Bài học từ các lớp của bạn' },
+  '/student/lessons/subjects': { title: 'Bài học theo môn', subtitle: 'Khám phá bài học theo từng môn học' },
   '/student/exams':      { title: 'Bài kiểm tra',        subtitle: 'Danh sách bài kiểm tra' },
   '/student/assignments':{ title: 'Bài tập',             subtitle: 'Bài tập được giao' },
   '/student/live':       { title: 'Phòng trực tuyến',    subtitle: 'Các phòng học trực tuyến' },
@@ -264,7 +264,9 @@ const pageMeta = {
 }
 
 const currentMeta = computed(() => {
-  const key = Object.keys(pageMeta).find(k => route.path === k || route.path.startsWith(k + '/'))
+  const key = Object.keys(pageMeta)
+    .sort((a, b) => b.length - a.length)
+    .find(k => route.path === k || route.path.startsWith(k + '/'))
   return pageMeta[key] ?? { title: 'TunAcademy', subtitle: '' }
 })
 const pageTitle = computed(() => currentMeta.value.title)

@@ -4,20 +4,20 @@
     <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
       <div class="flex gap-2 flex-wrap">
         <input v-model="filters.search" @input="debouncedFetch" placeholder="Tìm tên, email..."
-          class="px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56" />
-        <select v-model="filters.role" @change="fetch" class="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          class="px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#d63015] w-56" />
+        <select v-model="filters.role" @change="fetch" class="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#d63015]">
           <option value="">Tất cả vai trò</option>
           <option value="admin">Admin</option>
           <option value="teacher">Giáo viên</option>
           <option value="student">Học sinh</option>
         </select>
-        <select v-model="filters.status" @change="fetch" class="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <select v-model="filters.status" @change="fetch" class="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#d63015]">
           <option value="">Tất cả trạng thái</option>
           <option value="active">Hoạt động</option>
           <option value="inactive">Vô hiệu</option>
         </select>
       </div>
-      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
+      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-[#d63015] text-white rounded-xl text-sm font-medium hover:bg-[#c02a10] transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Thêm người dùng
       </button>
@@ -26,7 +26,7 @@
     <!-- Table -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div v-if="loading" class="py-12 text-center text-gray-400">
-        <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+        <div class="animate-spin w-6 h-6 border-2 border-[#d63015] border-t-transparent rounded-full mx-auto mb-2"></div>
         Đang tải...
       </div>
       <table v-else class="w-full text-sm">
@@ -43,7 +43,7 @@
           <tr v-for="u in users" :key="u.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-3">
               <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-semibold text-indigo-600 text-sm uppercase shrink-0">
+                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center font-semibold text-[#d63015] text-sm uppercase shrink-0">
                   {{ u.name?.charAt(0) }}
                 </div>
                 <div>
@@ -65,7 +65,7 @@
             </td>
             <td class="px-4 py-3 text-right">
               <div class="flex justify-end gap-1">
-                <button @click="openEdit(u)" class="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors" title="Chỉnh sửa">
+                <button @click="openEdit(u)" class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-[#d63015] transition-colors" title="Chỉnh sửa">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 </button>
                 <button @click="toggleStatus(u)" class="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors" :title="u.status === 'active' ? 'Vô hiệu hóa' : 'Kích hoạt'">
@@ -85,7 +85,7 @@
         <div class="flex gap-1">
           <button v-for="p in pagination.last_page" :key="p" @click="goPage(p)"
             class="w-8 h-8 rounded-lg text-xs font-medium transition-colors"
-            :class="p === pagination.current_page ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 text-gray-600'">
+            :class="p === pagination.current_page ? 'bg-[#d63015] text-white' : 'hover:bg-gray-100 text-gray-600'">
             {{ p }}
           </button>
         </div>
@@ -132,7 +132,7 @@
       </form>
       <template #footer>
         <button @click="modal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
-        <button @click="save" :disabled="saving" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60">
+        <button @click="save" :disabled="saving" class="px-4 py-2 rounded-xl bg-[#d63015] text-white text-sm hover:bg-[#c02a10] disabled:opacity-60">
           {{ saving ? 'Đang lưu...' : 'Lưu' }}
         </button>
       </template>
@@ -224,5 +224,5 @@ onMounted(fetch)
 
 <style scoped>
 @reference "tailwindcss";
-.input { @apply w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm; }
+.input { @apply w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm; }
 </style>

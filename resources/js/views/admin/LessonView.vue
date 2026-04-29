@@ -6,7 +6,13 @@
         <h2 class="text-lg font-bold text-gray-900">Quản lý bài học</h2>
         <p class="text-sm text-gray-400 mt-0.5">Tất cả bài học trong hệ thống</p>
       </div>
-      <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{{ meta.total ?? 0 }} bài học</span>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{{ meta.total ?? 0 }} bài học</span>
+        <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-[#d63015] text-white rounded-xl text-sm font-medium hover:bg-[#c02a10]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Thêm bài học
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -16,9 +22,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
         <input v-model="search" @input="debounceFetch" type="text" placeholder="Tìm tên bài học..."
-          class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+          class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015]"/>
       </div>
-      <select v-model="filterStatus" @change="fetchData()" class="px-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+      <select v-model="filterStatus" @change="fetchData()" class="px-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] bg-white">
         <option value="">Tất cả trạng thái</option>
         <option value="published">Đã xuất bản</option>
         <option value="draft">Bản nháp</option>
@@ -28,7 +34,7 @@
     <!-- Table -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div v-if="loading" class="py-16 text-center">
-        <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"/>
+        <div class="animate-spin w-6 h-6 border-2 border-[#d63015] border-t-transparent rounded-full mx-auto mb-2"/>
         <p class="text-sm text-gray-400">Đang tải...</p>
       </div>
       <table v-else class="w-full text-sm">
@@ -38,7 +44,7 @@
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Giáo viên</th>
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Lớp</th>
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
-            <th class="px-5 py-3 w-16"/>
+            <th class="px-5 py-3 w-24"/>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -66,17 +72,69 @@
               </span>
             </td>
             <td class="px-5 py-3 text-right">
-              <button @click="confirmDelete(l, 'lesson')" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
+              <div class="flex justify-end gap-1">
+                <button @click="openEdit(l)" class="p-1.5 rounded-lg text-gray-400 hover:text-[#d63015] hover:bg-red-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button @click="confirmDelete(l)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Pagination -->
     <Pagination :meta="meta" @page="fetchData" />
+
+    <!-- Create / Edit Modal -->
+    <AppModal v-model="formModal" :title="editItem ? 'Chỉnh sửa bài học' : 'Thêm bài học mới'">
+      <form class="space-y-4" @submit.prevent="save">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="label">Lớp học <span class="text-red-500">*</span></label>
+            <select v-model="form.classroom_id" class="input" required>
+              <option value="">Chọn lớp</option>
+              <option v-for="c in classrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Môn học <span class="text-red-500">*</span></label>
+            <select v-model="form.subject_id" class="input" required>
+              <option value="">Chọn môn</option>
+              <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Tiêu đề <span class="text-red-500">*</span></label>
+          <input v-model="form.title" class="input" placeholder="Nhập tiêu đề bài học" required />
+        </div>
+        <div>
+          <label class="label">Mô tả</label>
+          <textarea v-model="form.description" class="input" rows="3" placeholder="Mô tả ngắn về bài học"/>
+        </div>
+        <div>
+          <label class="label">Đường dẫn video</label>
+          <input v-model="form.video_path" class="input" placeholder="https://..." />
+        </div>
+        <div>
+          <label class="label">Trạng thái</label>
+          <select v-model="form.status" class="input">
+            <option value="draft">Bản nháp</option>
+            <option value="published">Xuất bản</option>
+          </select>
+        </div>
+        <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
+      </form>
+      <template #footer>
+        <button @click="formModal = false" class="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Hủy</button>
+        <button @click="save" :disabled="saving" class="px-4 py-2 text-sm rounded-xl bg-[#d63015] hover:bg-[#c02a10] text-white font-semibold disabled:opacity-60">
+          {{ saving ? 'Đang lưu...' : 'Lưu' }}
+        </button>
+      </template>
+    </AppModal>
 
     <!-- Delete confirm -->
     <AppModal v-model="deleteModal" title="Xác nhận xóa" size="sm">
@@ -92,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 import Pagination from '@components/common/Pagination.vue'
@@ -103,9 +161,18 @@ const search = ref('')
 const filterStatus = ref('')
 const meta = ref({ total: 0, current_page: 1, last_page: 1 })
 
+const formModal = ref(false)
+const editItem = ref(null)
+const saving = ref(false)
+const formError = ref('')
+const form = reactive({ classroom_id: '', subject_id: '', title: '', description: '', video_path: '', status: 'draft' })
+
 const deleteModal = ref(false)
 const deleteTarget = ref(null)
 const deleting = ref(false)
+
+const classrooms = ref([])
+const subjects = ref([])
 
 let debounceTimer = null
 function debounceFetch() {
@@ -124,6 +191,54 @@ async function fetchData(page = 1) {
   } finally { loading.value = false }
 }
 
+async function loadOptions() {
+  const [cls, sub] = await Promise.all([
+    api.get('/admin/classrooms', { params: { per_page: 200 } }),
+    api.get('/admin/subjects'),
+  ])
+  classrooms.value = cls.data.data ?? cls.data
+  subjects.value = sub.data.data ?? sub.data
+}
+
+function openCreate() {
+  editItem.value = null
+  Object.assign(form, { classroom_id: '', subject_id: '', title: '', description: '', video_path: '', status: 'draft' })
+  formError.value = ''
+  formModal.value = true
+}
+
+function openEdit(l) {
+  editItem.value = l
+  Object.assign(form, {
+    classroom_id: l.classroom?.id ?? l.classroom_id ?? '',
+    subject_id: l.subject?.id ?? l.subject_id ?? '',
+    title: l.title,
+    description: l.description ?? '',
+    video_path: l.video_path ?? '',
+    status: l.status ?? 'draft',
+  })
+  formError.value = ''
+  formModal.value = true
+}
+
+async function save() {
+  saving.value = true
+  formError.value = ''
+  try {
+    if (editItem.value) {
+      await api.put(`/admin/content/lessons/${editItem.value.id}`, form)
+    } else {
+      await api.post('/admin/content/lessons', form)
+    }
+    formModal.value = false
+    fetchData(meta.value.current_page)
+  } catch (e) {
+    const errors = e.response?.data?.errors
+    if (errors) formError.value = Object.values(errors).flat().join(' ')
+    else formError.value = e.response?.data?.message ?? 'Có lỗi xảy ra'
+  } finally { saving.value = false }
+}
+
 function confirmDelete(item) {
   deleteTarget.value = item
   deleteModal.value = true
@@ -138,5 +253,11 @@ async function doDelete() {
   } finally { deleting.value = false }
 }
 
-onMounted(fetchData)
+onMounted(() => { fetchData(); loadOptions() })
 </script>
+
+<style scoped>
+@reference "tailwindcss";
+.input { @apply w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm bg-white; }
+.label { @apply block text-sm font-medium text-gray-700 mb-1; }
+</style>

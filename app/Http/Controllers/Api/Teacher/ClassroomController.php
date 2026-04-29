@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Classroom\ClassroomResource;
-use App\Models\{Classroom, ClassroomStudent, User};
+use App\Models\{Classroom, ClassroomStudent, LiveSession, User};
 use Illuminate\Http\Request;
 
 class ClassroomController extends Controller
@@ -42,6 +42,63 @@ class ClassroomController extends Controller
         ClassroomStudent::where(['classroom_id' => $classroom->id, 'student_id' => $student->id])
             ->update(['status' => 'transferred', 'left_at' => today()]);
         return $this->success(null, 'Xóa học sinh thành công');
+    }
+
+    public function roomStatus(Request $request, Classroom $classroom)
+    {
+        $this->gate($request, $classroom);
+
+        $session = LiveSession::where('classroom_id', $classroom->id)
+            ->where('is_permanent', true)
+            ->orderByDesc('id')
+            ->with(['participants' => fn($q) => $q->whereNull('left_at')->with('user:id,name,avatar')])
+            ->first();
+
+        return $this->success([
+            'classroom' => ['id' => $classroom->id, 'name' => $classroom->name, 'room_code' => $classroom->room_code],
+            'session'   => $session,
+            'is_live'   => $session?->status === 'live',
+        ]);
+    }
+
+    public function startRoom(Request $request, Classroom $classroom)
+    {
+        $this->gate($request, $classroom);
+
+        $session = LiveSession::where('classroom_id', $classroom->id)
+            ->where('is_permanent', true)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($session) {
+            $session->update(['status' => 'live', 'started_at' => now(), 'ended_at' => null, 'teacher_id' => $request->user()->id]);
+        } else {
+            $session = LiveSession::create([
+                'classroom_id'     => $classroom->id,
+                'teacher_id'       => $request->user()->id,
+                'title'            => 'Phòng học ' . $classroom->name,
+                'room_code'        => $classroom->room_code,
+                'is_permanent'     => true,
+                'status'           => 'live',
+                'started_at'       => now(),
+                'duration_minutes' => 90,
+                'max_participants' => 50,
+            ]);
+        }
+
+        return $this->success($session, 'Đã mở phòng học');
+    }
+
+    public function endRoom(Request $request, Classroom $classroom)
+    {
+        $this->gate($request, $classroom);
+
+        LiveSession::where('classroom_id', $classroom->id)
+            ->where('is_permanent', true)
+            ->where('status', 'live')
+            ->update(['status' => 'scheduled', 'ended_at' => now()]);
+
+        return $this->success(null, 'Đã kết thúc phòng học');
     }
 
     private function gate(Request $request, Classroom $classroom): void

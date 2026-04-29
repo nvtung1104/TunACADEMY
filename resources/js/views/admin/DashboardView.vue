@@ -19,12 +19,12 @@
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 class="font-semibold text-gray-800">Bài kiểm tra gần đây</h3>
-          <RouterLink to="/admin/reports" class="text-xs text-indigo-600 hover:underline">Xem tất cả</RouterLink>
+          <RouterLink to="/admin/reports" class="text-xs text-[#d63015] hover:underline">Xem tất cả</RouterLink>
         </div>
         <div class="divide-y divide-gray-50">
           <div v-if="recentAttempts.length === 0" class="px-6 py-8 text-center text-gray-400 text-sm">Chưa có dữ liệu</div>
           <div v-for="a in recentAttempts.slice(0, 5)" :key="a.id" class="px-6 py-3 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-600">
+            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-semibold text-[#d63015]">
               {{ a.student?.name?.charAt(0) }}
             </div>
             <div class="flex-1 min-w-0">
@@ -45,9 +45,9 @@
         </div>
         <div class="p-6 grid grid-cols-2 gap-3">
           <RouterLink v-for="action in quickActions" :key="action.to" :to="action.to"
-            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all text-center group">
+            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-[#d63015] hover:bg-red-50 transition-all text-center group">
             <span class="text-2xl">{{ action.icon }}</span>
-            <span class="text-xs font-medium text-gray-600 group-hover:text-indigo-700">{{ action.label }}</span>
+            <span class="text-xs font-medium text-gray-600 group-hover:text-[#d63015]">{{ action.label }}</span>
           </RouterLink>
         </div>
       </div>

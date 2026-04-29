@@ -1,195 +1,151 @@
 <template>
-  <div class="space-y-4">
-    <!-- Toolbar -->
-    <div class="flex justify-between items-center">
-      <p class="text-sm text-gray-500">Quản lý phòng học trực tuyến</p>
-      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Tạo phòng
-      </button>
+  <div class="space-y-5">
+    <div>
+      <h2 class="text-lg font-bold text-gray-900">Phòng học trực tuyến</h2>
+      <p class="text-sm text-gray-400 mt-0.5">Mỗi lớp có sẵn 1 phòng học, bấm Bắt đầu để mở phòng cho học sinh vào</p>
     </div>
 
-    <!-- Sessions -->
-    <div v-if="loading" class="py-12 text-center text-gray-400">
-      <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-      Đang tải...
-    </div>
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-if="sessions.length === 0" class="col-span-full py-16 text-center text-gray-400">
-        <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-        Chưa có phòng học nào
+    <!-- Loading -->
+    <div v-if="loading" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div v-for="i in 3" :key="i" class="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+        <div class="h-4 bg-gray-200 rounded w-2/3 mb-3"/>
+        <div class="h-3 bg-gray-200 rounded w-1/2 mb-5"/>
+        <div class="h-10 bg-gray-200 rounded-xl"/>
       </div>
-      <div v-for="s in sessions" :key="s.id" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all">
-        <!-- Status indicator -->
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex-1 min-w-0 pr-2">
-            <h3 class="font-semibold text-gray-900 truncate">{{ s.title }}</h3>
-            <p class="text-xs text-gray-400 mt-0.5">{{ s.classroom?.name }}</p>
+    </div>
+
+    <!-- Empty -->
+    <div v-else-if="!classrooms.length" class="bg-white rounded-2xl border border-gray-100 shadow-sm py-16 text-center">
+      <div class="text-4xl mb-3">🎥</div>
+      <p class="text-gray-500 font-medium">Bạn chưa được giao lớp nào</p>
+      <p class="text-sm text-gray-400 mt-1">Liên hệ quản trị viên để được thêm vào lớp</p>
+    </div>
+
+    <!-- Rooms grid -->
+    <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div v-for="c in classrooms" :key="c.id"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <!-- Live status bar -->
+        <div class="h-1.5" :class="c.is_live ? 'bg-green-500' : 'bg-gray-200'"/>
+
+        <div class="p-5">
+          <!-- Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <p class="font-bold text-gray-900 text-base">{{ c.name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5 font-mono">Mã phòng: {{ c.room_code }}</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+              :class="c.is_live ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+              <span v-if="c.is_live" class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/>
+              {{ c.is_live ? 'Đang mở' : 'Đóng' }}
+            </span>
           </div>
-          <span class="px-2 py-1 rounded-full text-xs font-medium shrink-0" :class="sessionStatusClass(s.status)">
-            {{ sessionStatusLabel(s.status) }}
-          </span>
-        </div>
 
-        <p v-if="s.description" class="text-xs text-gray-500 mb-3 line-clamp-2">{{ s.description }}</p>
+          <!-- Participant count when live -->
+          <div v-if="c.is_live && c.session" class="flex items-center gap-2 mb-4 px-3 py-2 bg-green-50 rounded-xl">
+            <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-sm text-green-700 font-medium">{{ c.session.participants?.length ?? 0 }} học sinh đang trong phòng</span>
+          </div>
 
-        <!-- Info -->
-        <div class="flex items-center gap-4 text-xs text-gray-500 mb-4">
-          <span class="flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            {{ s.participants_count ?? 0 }} tham gia
-          </span>
-          <span v-if="s.started_at" class="flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            {{ formatDate(s.started_at) }}
-          </span>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex gap-2">
-          <button v-if="s.status === 'scheduled'" @click="startSession(s)"
-            class="flex-1 py-1.5 rounded-xl bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition-colors">
-            Bắt đầu
-          </button>
-          <button v-if="s.status === 'live'" @click="endSession(s)"
-            class="flex-1 py-1.5 rounded-xl bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors">
-            Kết thúc
-          </button>
-          <button v-if="s.status === 'live'" @click="joinSession(s)"
-            class="flex-1 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors">
-            Vào phòng
-          </button>
-          <button @click="openEdit(s)" class="py-1.5 px-3 rounded-xl border border-gray-200 text-xs text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors">
-            Sửa
-          </button>
-          <button @click="deleteSession(s)" class="py-1.5 px-3 rounded-xl border border-red-200 text-xs text-red-500 hover:bg-red-50 transition-colors">
-            Xóa
-          </button>
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button v-if="!c.is_live"
+              @click="startRoom(c)"
+              :disabled="c.starting"
+              class="flex-1 py-2.5 rounded-xl bg-[#d63015] hover:bg-[#c02a10] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ c.starting ? 'Đang mở...' : 'Bắt đầu' }}
+            </button>
+            <template v-else>
+              <button
+                @click="openRoom(c)"
+                class="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                Vào phòng
+              </button>
+              <button
+                @click="endRoom(c)"
+                :disabled="c.ending"
+                class="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition-colors disabled:opacity-60">
+                {{ c.ending ? '...' : 'Kết thúc' }}
+              </button>
+            </template>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Modal -->
-    <AppModal v-model="modal" :title="editItem ? 'Chỉnh sửa phòng học' : 'Tạo phòng học mới'" size="md">
-      <form class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Tiêu đề <span class="text-red-500">*</span></label>
-          <input v-model="form.title" class="input" required placeholder="VD: Buổi học Toán - 10A1" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
-          <textarea v-model="form.description" class="input resize-none" rows="2"></textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Lớp học <span class="text-red-500">*</span></label>
-          <select v-model="form.classroom_id" class="input" required>
-            <option value="">Chọn lớp</option>
-            <option v-for="c in classrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian dự kiến</label>
-          <input v-model="form.scheduled_at" type="datetime-local" class="input" />
-        </div>
-        <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
-      </form>
-      <template #footer>
-        <button @click="modal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
-        <button @click="save" :disabled="saving" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60 font-medium">
-          {{ saving ? 'Đang lưu...' : 'Lưu' }}
-        </button>
-      </template>
-    </AppModal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 import api from '@api/axios'
-import AppModal from '@components/common/AppModal.vue'
 
-const router = useRouter()
-const sessions = ref([])
 const classrooms = ref([])
 const loading = ref(true)
-const modal = ref(false)
-const editItem = ref(null)
-const saving = ref(false)
-const formError = ref('')
-const form = reactive({ title: '', description: '', classroom_id: '', scheduled_at: '' })
 
-async function fetch() {
+async function fetchRooms() {
   loading.value = true
   try {
-    const { data } = await api.get('/teacher/live-sessions')
-    sessions.value = data.data?.data ?? data.data ?? []
-  } finally { loading.value = false }
+    const { data } = await api.get('/teacher/classrooms')
+    const list = data.data ?? []
+
+    // Fetch room status for each classroom in parallel
+    const withStatus = await Promise.all(
+      list.map(async (c) => {
+        try {
+          const res = await api.get(`/teacher/classrooms/${c.id}/room`)
+          const room = res.data.data
+          return { ...c, is_live: room.is_live, session: room.session, starting: false, ending: false }
+        } catch {
+          return { ...c, is_live: false, session: null, starting: false, ending: false }
+        }
+      })
+    )
+    classrooms.value = withStatus
+  } finally {
+    loading.value = false
+  }
 }
 
-function openCreate() {
-  editItem.value = null
-  Object.assign(form, { title: '', description: '', classroom_id: '', scheduled_at: '' })
-  formError.value = ''
-  modal.value = true
-}
-
-function openEdit(s) {
-  editItem.value = s
-  Object.assign(form, { title: s.title, description: s.description ?? '', classroom_id: s.classroom?.id ?? '', scheduled_at: s.scheduled_at ? s.scheduled_at.slice(0, 16) : '' })
-  formError.value = ''
-  modal.value = true
-}
-
-async function save() {
-  saving.value = true; formError.value = ''
+async function startRoom(c) {
+  c.starting = true
   try {
-    const payload = { ...form }
-    if (!payload.scheduled_at) delete payload.scheduled_at
-    if (editItem.value) await api.put(`/teacher/live-sessions/${editItem.value.id}`, payload)
-    else await api.post('/teacher/live-sessions', payload)
-    modal.value = false; fetch()
-  } catch (e) { formError.value = e.response?.data?.message ?? 'Có lỗi xảy ra' }
-  finally { saving.value = false }
+    const { data } = await api.post(`/teacher/classrooms/${c.id}/room/start`)
+    c.session = data.data
+    c.is_live = true
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Không thể mở phòng')
+  } finally {
+    c.starting = false
+  }
 }
 
-async function startSession(s) {
-  try { await api.post(`/teacher/live-sessions/${s.id}/start`); fetch() }
-  catch (e) { alert(e.response?.data?.message ?? 'Không thể bắt đầu') }
+async function endRoom(c) {
+  if (!confirm(`Kết thúc phòng học "${c.name}"?`)) return
+  c.ending = true
+  try {
+    await api.post(`/teacher/classrooms/${c.id}/room/end`)
+    c.is_live = false
+    c.session = null
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Không thể kết thúc phòng')
+  } finally {
+    c.ending = false
+  }
 }
 
-async function endSession(s) {
-  if (!confirm('Kết thúc phiên học trực tuyến này?')) return
-  try { await api.post(`/teacher/live-sessions/${s.id}/end`); fetch() }
-  catch (e) { alert(e.response?.data?.message ?? 'Không thể kết thúc') }
+function openRoom(c) {
+  alert(`Phòng học ${c.name}\nMã phòng: ${c.room_code}\n\nTính năng WebRTC đang được tích hợp.`)
 }
 
-function joinSession(s) {
-  router.push(`/live/rooms/${s.id}`)
-}
-
-async function deleteSession(s) {
-  if (!confirm(`Xóa phòng học "${s.title}"?`)) return
-  try { await api.delete(`/teacher/live-sessions/${s.id}`); fetch() }
-  catch (e) { alert(e.response?.data?.message ?? 'Không thể xóa') }
-}
-
-function sessionStatusLabel(s) { return { scheduled: 'Chờ bắt đầu', live: 'Đang học', ended: 'Đã kết thúc' }[s] ?? s }
-function sessionStatusClass(s) { return { scheduled: 'bg-blue-100 text-blue-700', live: 'bg-green-100 text-green-700 animate-pulse', ended: 'bg-gray-100 text-gray-500' }[s] ?? '' }
-function formatDate(iso) { return iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '' }
-
-onMounted(async () => {
-  const { data } = await api.get('/teacher/classrooms')
-  classrooms.value = data.data?.data ?? data.data ?? []
-  fetch()
-})
+onMounted(fetchRooms)
 </script>
-
-<style scoped>
-@reference "tailwindcss";
-.input { @apply w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm; }
-</style>

@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\Teacher\SubjectController as TeacherSubjectControll
 use App\Http\Controllers\Api\Teacher\LessonController;
 use App\Http\Controllers\Api\Teacher\ExamController as TeacherExamController;
 use App\Http\Controllers\Api\Teacher\AssignmentController as TeacherAssignmentController;
-use App\Http\Controllers\Api\Teacher\LiveController as TeacherLiveController;
+use App\Http\Controllers\Api\Teacher\QuestionBankController;
 use App\Http\Controllers\Api\Student\ClassroomController as StudentClassroomController;
 use App\Http\Controllers\Api\Student\LessonController as StudentLessonController;
 use App\Http\Controllers\Api\Student\ExamController as StudentExamController;
@@ -121,10 +121,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('content')->group(function () {
             Route::get('/lessons',                       [AdminContentController::class, 'lessons']);
+            Route::post('/lessons',                      [AdminContentController::class, 'storeLesson']);
+            Route::put('/lessons/{lesson}',              [AdminContentController::class, 'updateLesson']);
             Route::delete('/lessons/{lesson}',           [AdminContentController::class, 'deleteLesson']);
             Route::get('/exams',                         [AdminContentController::class, 'exams']);
+            Route::post('/exams',                        [AdminContentController::class, 'storeExam']);
+            Route::put('/exams/{exam}',                  [AdminContentController::class, 'updateExam']);
             Route::delete('/exams/{exam}',               [AdminContentController::class, 'deleteExam']);
             Route::get('/assignments',                   [AdminContentController::class, 'assignments']);
+            Route::post('/assignments',                  [AdminContentController::class, 'storeAssignment']);
+            Route::put('/assignments/{assignment}',      [AdminContentController::class, 'updateAssignment']);
             Route::delete('/assignments/{assignment}',   [AdminContentController::class, 'deleteAssignment']);
             Route::get('/live-sessions',                 [AdminContentController::class, 'liveSessions']);
             Route::delete('/live-sessions/{liveSession}',[AdminContentController::class, 'deleteLiveSession']);
@@ -146,9 +152,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('my-subjects', [TeacherSubjectController::class, 'mySubjects']);
         Route::post('classrooms/{classroom}/students', [TeacherClassroomController::class, 'addStudent']);
         Route::delete('classrooms/{classroom}/students/{student}', [TeacherClassroomController::class, 'removeStudent']);
+        Route::get('classrooms/{classroom}/room', [TeacherClassroomController::class, 'roomStatus']);
+        Route::post('classrooms/{classroom}/room/start', [TeacherClassroomController::class, 'startRoom']);
+        Route::post('classrooms/{classroom}/room/end', [TeacherClassroomController::class, 'endRoom']);
 
         Route::apiResource('lessons', LessonController::class);
         Route::post('lessons/{lesson}/publish', [LessonController::class, 'publish']);
+        Route::post('lessons/{lesson}/share', [LessonController::class, 'share']);
         Route::post('lessons/{lesson}/thumbnail', [LessonController::class, 'uploadThumbnail']);
         Route::post('lessons/{lesson}/materials', [LessonController::class, 'storeMaterial']);
         Route::delete('lessons/{lesson}/materials/{material}', [LessonController::class, 'destroyMaterial']);
@@ -159,19 +169,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('exams/{exam}/questions/{question}', [TeacherExamController::class, 'updateQuestion']);
         Route::delete('exams/{exam}/questions/{question}', [TeacherExamController::class, 'destroyQuestion']);
         Route::post('exams/{exam}/publish', [TeacherExamController::class, 'publish']);
+        Route::post('exams/{exam}/share', [TeacherExamController::class, 'share']);
+        Route::post('exams/{exam}/import-questions', [QuestionBankController::class, 'importToExam']);
         Route::get('exams/{exam}/results', [TeacherExamController::class, 'results']);
         Route::get('exams/{exam}/results/{student}', [TeacherExamController::class, 'studentResult']);
         Route::get('exams/{exam}/attempts', [TeacherExamController::class, 'attempts']);
         Route::get('exams/{exam}/attempts/{attempt}/logs', [TeacherExamController::class, 'attemptLogs']);
 
+        // Ngân hàng câu hỏi
+        Route::apiResource('question-bank', QuestionBankController::class);
+        Route::get('question-bank-public', [QuestionBankController::class, 'publicBank']);
+
         Route::apiResource('assignments', TeacherAssignmentController::class);
+        Route::post('assignments/{assignment}/share', [TeacherAssignmentController::class, 'share']);
         Route::post('assignments/{assignment}/thumbnail', [TeacherAssignmentController::class, 'uploadThumbnail']);
         Route::get('assignments/{assignment}/submissions', [TeacherAssignmentController::class, 'submissions']);
         Route::post('assignments/{assignment}/submissions/{submission}/grade', [TeacherAssignmentController::class, 'grade']);
 
-        Route::apiResource('live-sessions', TeacherLiveController::class);
-        Route::post('live-sessions/{session}/start', [TeacherLiveController::class, 'start']);
-        Route::post('live-sessions/{session}/end', [TeacherLiveController::class, 'end']);
     });
 
     // ─── Student ─────────────────────────────────────────────────────────────
@@ -180,6 +194,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('classrooms', [StudentClassroomController::class, 'index']);
         Route::get('classrooms/{classroom}', [StudentClassroomController::class, 'show']);
+        Route::get('my-rooms', [StudentClassroomController::class, 'myRooms']);
 
         Route::get('lessons', [StudentLessonController::class, 'index']);
         Route::get('lessons/{lesson}', [StudentLessonController::class, 'show']);

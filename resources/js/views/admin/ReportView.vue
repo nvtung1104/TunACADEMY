@@ -13,7 +13,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <h3 class="font-semibold text-gray-800 mb-4">Xuất báo cáo</h3>
       <div class="flex flex-wrap gap-3">
-        <button @click="exportData('students')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-200 text-indigo-600 text-sm hover:bg-indigo-50 transition-colors">
+        <button @click="exportData('students')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#d63015]/30 text-[#d63015] text-sm hover:bg-red-50 transition-colors">
           📥 Xuất danh sách học sinh
         </button>
         <button @click="exportData('teachers')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-200 text-emerald-600 text-sm hover:bg-emerald-50 transition-colors">

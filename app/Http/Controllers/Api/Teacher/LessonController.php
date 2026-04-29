@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Teacher;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreLessonRequest;
 use App\Http\Resources\Lesson\LessonResource;
-use App\Models\{Lesson, LessonMaterial};
+use App\Models\{Classroom, Lesson, LessonMaterial, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -97,6 +97,37 @@ class LessonController extends Controller
         $material->delete();
 
         return $this->success(null, 'Đã xóa tài liệu');
+    }
+
+    public function share(Request $request, Lesson $lesson)
+    {
+        $this->gate($request, $lesson);
+
+        $data = $request->validate([
+            'visibility'             => 'required|in:public,private,class,selected',
+            'target_classroom_ids'   => 'array',
+            'target_classroom_ids.*' => 'integer|exists:classrooms,id',
+            'target_student_ids'     => 'array',
+            'target_student_ids.*'   => 'integer|exists:users,id',
+        ]);
+
+        $lesson->update(['visibility' => $data['visibility']]);
+
+        if ($data['visibility'] === 'selected') {
+            $lesson->shares()->delete();
+
+            foreach ($data['target_classroom_ids'] ?? [] as $classroomId) {
+                $lesson->shares()->create(['target_type' => Classroom::class, 'target_id' => $classroomId]);
+            }
+
+            foreach ($data['target_student_ids'] ?? [] as $userId) {
+                $lesson->shares()->create(['target_type' => User::class, 'target_id' => $userId]);
+            }
+        } else {
+            $lesson->shares()->delete();
+        }
+
+        return $this->success(null, 'Cập nhật chia sẻ thành công');
     }
 
     public function uploadThumbnail(Request $request, Lesson $lesson)

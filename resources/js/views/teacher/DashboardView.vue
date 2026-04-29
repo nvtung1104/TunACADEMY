@@ -20,14 +20,14 @@
       <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 class="font-semibold text-gray-800">Kết quả kiểm tra gần đây</h3>
-          <RouterLink to="/teacher/exams" class="text-xs text-indigo-600 hover:underline font-medium">Xem tất cả</RouterLink>
+          <RouterLink to="/teacher/exams" class="text-xs text-[#d63015] hover:underline font-medium">Xem tất cả</RouterLink>
         </div>
         <div class="divide-y divide-gray-50">
           <div v-if="recentResults.length === 0 && !loading" class="py-10 text-center text-gray-400 text-sm">
             Chưa có kết quả kiểm tra
           </div>
           <div v-for="r in recentResults.slice(0, 6)" :key="r.id" class="px-6 py-3 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-600 shrink-0 uppercase">
+            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-semibold text-[#d63015] shrink-0 uppercase">
               {{ r.student?.name?.charAt(0) }}
             </div>
             <div class="flex-1 min-w-0">
@@ -104,12 +104,12 @@
           </div>
           <div class="p-3 space-y-1">
             <RouterLink v-for="action in quickActions" :key="action.to" :to="action.to"
-              class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-indigo-50 transition-colors group">
+              class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 transition-colors group">
               <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" :class="action.bg">
                 <span class="w-4 h-4" :class="action.color" v-html="action.icon"></span>
               </div>
-              <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">{{ action.label }}</span>
-              <svg class="w-4 h-4 text-gray-300 ml-auto group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-[#d63015]">{{ action.label }}</span>
+              <svg class="w-4 h-4 text-gray-300 ml-auto group-hover:text-[#d63015]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </RouterLink>
@@ -134,7 +134,6 @@ const iconClip = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><pa
 const iconUsers = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`
 const iconPencil = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`
 const iconClass = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>`
-const iconVideo = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`
 
 const stats = ref([
   { label: 'Lớp học', icon: iconClass, value: 0, badge: 'Của tôi', badgeClass: 'bg-blue-100 text-blue-600', iconBg: 'bg-blue-50', iconColor: 'text-blue-500' },
@@ -143,11 +142,13 @@ const stats = ref([
   { label: 'Đề kiểm tra', icon: iconClip, value: 0, badge: 'Đã tạo', badgeClass: 'bg-violet-100 text-violet-600', iconBg: 'bg-violet-50', iconColor: 'text-violet-500' },
 ])
 
+const iconDatabase = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3zm0 0v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7m-16 5v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5"/></svg>`
+
 const quickActions = [
   { to: '/teacher/lessons', label: 'Tạo bài học mới', icon: iconBook, bg: 'bg-amber-50', color: 'text-amber-500' },
   { to: '/teacher/exams', label: 'Tạo đề kiểm tra', icon: iconClip, bg: 'bg-violet-50', color: 'text-violet-500' },
-  { to: '/teacher/assignments', label: 'Giao bài tập', icon: iconPencil, bg: 'bg-indigo-50', color: 'text-indigo-500' },
-  { to: '/teacher/live', label: 'Tạo phòng trực tuyến', icon: iconVideo, bg: 'bg-red-50', color: 'text-red-500' },
+  { to: '/teacher/assignments', label: 'Giao bài tập', icon: iconPencil, bg: 'bg-emerald-50', color: 'text-emerald-500' },
+  { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: iconDatabase, bg: 'bg-red-50', color: 'text-[#d63015]' },
 ]
 
 function formatDate(iso) {

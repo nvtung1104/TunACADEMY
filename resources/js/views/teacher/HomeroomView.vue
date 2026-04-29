@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Loading -->
     <div v-if="loading" class="py-16 text-center">
-      <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"/>
+      <div class="animate-spin w-6 h-6 border-2 border-[#d63015] border-t-transparent rounded-full mx-auto mb-2"/>
       <p class="text-sm text-gray-400">Đang tải...</p>
     </div>
 
@@ -15,28 +15,28 @@
 
     <template v-else>
       <!-- Class info -->
-      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+      <div class="bg-gradient-to-r from-[#d63015] to-[#c02a10] rounded-2xl p-6 text-white shadow-lg">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-indigo-200 text-sm font-medium uppercase tracking-wider">Lớp chủ nhiệm</span>
+          <span class="text-red-200 text-sm font-medium uppercase tracking-wider">Lớp chủ nhiệm</span>
           <span class="text-xs px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm">
             {{ classroom.school_year?.name }}
           </span>
         </div>
         <h1 class="text-3xl font-extrabold mb-1">{{ classroom.name }}</h1>
-        <p class="text-indigo-200">Khối {{ classroom.grade?.level }} · {{ classroom.grade?.name }}</p>
+        <p class="text-red-200">Khối {{ classroom.grade?.level }} · {{ classroom.grade?.name }}</p>
 
         <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
           <div class="text-center">
             <p class="text-2xl font-bold">{{ students.length }}</p>
-            <p class="text-xs text-indigo-200 mt-0.5">Học sinh</p>
+            <p class="text-xs text-red-200 mt-0.5">Học sinh</p>
           </div>
           <div class="text-center">
             <p class="text-2xl font-bold">{{ classroom.max_students ?? '—' }}</p>
-            <p class="text-xs text-indigo-200 mt-0.5">Sĩ số tối đa</p>
+            <p class="text-xs text-red-200 mt-0.5">Sĩ số tối đa</p>
           </div>
           <div class="text-center">
             <p class="text-2xl font-bold">{{ subjectTeachers.length }}</p>
-            <p class="text-xs text-indigo-200 mt-0.5">Giáo viên bộ môn</p>
+            <p class="text-xs text-red-200 mt-0.5">Giáo viên bộ môn</p>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
               <input v-model="studentSearch" type="text" placeholder="Tìm học sinh..."
-                class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-44"/>
+                class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] w-44"/>
             </div>
           </div>
 
@@ -63,7 +63,7 @@
             <div v-for="(s, i) in filteredStudents" :key="s.id"
               class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
               <span class="text-xs text-gray-400 w-6 text-right shrink-0">{{ i + 1 }}</span>
-              <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 uppercase shrink-0">
+              <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-[#d63015] uppercase shrink-0">
                 {{ s.name?.charAt(0) }}
               </div>
               <div class="flex-1 min-w-0">
@@ -104,7 +104,7 @@
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-2">
             <h3 class="font-semibold text-gray-800 mb-3">Thao tác nhanh</h3>
             <RouterLink to="/teacher/lessons"
-              class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-colors">
+              class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-[#d63015] text-sm font-medium transition-colors">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
               Thêm bài học cho lớp
             </RouterLink>

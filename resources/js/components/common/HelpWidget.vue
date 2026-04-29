@@ -164,25 +164,25 @@ const filtered = computed(() => {
 .help-fab {
   position: fixed;
   bottom: 28px;
-  left: 28px;
+  right: 28px;
   z-index: 9990;
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: #2196f3;
+  background: #d63015;
   color: #fff;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.45);
+  box-shadow: 0 4px 20px rgba(214, 48, 21, 0.45);
   transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .help-fab:hover {
-  background: #1976d2;
+  background: #c02a10;
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(33, 150, 243, 0.5);
+  box-shadow: 0 6px 24px rgba(214, 48, 21, 0.5);
 }
 .help-fab:active { transform: scale(0.93); }
 
@@ -199,7 +199,7 @@ const filtered = computed(() => {
 .help-panel {
   position: fixed;
   bottom: 92px;
-  left: 20px;
+  right: 20px;
   z-index: 9991;
   width: 330px;
   max-height: 72vh;
@@ -215,7 +215,7 @@ const filtered = computed(() => {
 
 @media (max-width: 480px) {
   .help-panel { left: 12px; right: 12px; width: auto; bottom: 84px; }
-  .help-fab   { bottom: 20px; left: 20px; }
+  .help-fab   { bottom: 20px; right: 20px; }
 }
 
 /* Header */

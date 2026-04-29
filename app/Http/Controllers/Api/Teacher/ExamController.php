@@ -5,7 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreExamRequest;
 use App\Http\Requests\Teacher\StoreQuestionRequest;
 use App\Http\Resources\Exam\{ExamResource, ExamAttemptResource};
-use App\Models\{Exam, ExamAttempt, ExamQuestion};
+use App\Models\{Classroom, Exam, ExamAttempt, ExamQuestion, User};
 use Illuminate\Http\Request;
 
 class ExamController extends Controller
@@ -119,6 +119,49 @@ class ExamController extends Controller
             'attempt' => new ExamAttemptResource($attempt->load('student')),
             'logs'    => $logs,
         ]);
+    }
+
+    public function share(Request $request, Exam $exam)
+    {
+        $this->gate($request, $exam);
+
+        $data = $request->validate([
+            'visibility'             => 'required|in:public,private,class,selected',
+            'target_classroom_ids'   => 'array',
+            'target_classroom_ids.*' => 'integer|exists:classrooms,id',
+            'target_student_ids'     => 'array',
+            'target_student_ids.*'   => 'integer|exists:users,id',
+        ]);
+
+        $exam->update(['visibility' => $data['visibility']]);
+
+        if ($data['visibility'] === 'selected') {
+            $shares = [];
+
+            foreach ($data['target_classroom_ids'] ?? [] as $classroomId) {
+                $shares[] = [
+                    'target_type' => Classroom::class,
+                    'target_id'   => $classroomId,
+                ];
+            }
+
+            foreach ($data['target_student_ids'] ?? [] as $userId) {
+                $shares[] = [
+                    'target_type' => User::class,
+                    'target_id'   => $userId,
+                ];
+            }
+
+            // Replace existing shares for this exam
+            $exam->shares()->delete();
+            foreach ($shares as $share) {
+                $exam->shares()->create($share);
+            }
+        } else {
+            $exam->shares()->delete();
+        }
+
+        return $this->success(null, 'Cập nhật chia sẻ thành công');
     }
 
     public function uploadThumbnail(Request $request, Exam $exam)

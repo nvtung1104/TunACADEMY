@@ -72,7 +72,7 @@ class AuthController extends Controller
             'parent_address' => 'sometimes|nullable|string',
         ]);
         $request->user()->update($data);
-        return $this->success(new UserResource($request->user()->fresh()), 'Cập nhật thành công');
+        return $this->success(new UserResource($request->user()->fresh()->load('roles')), 'Cập nhật thành công');
     }
 
     public function updateAvatar(Request $request)

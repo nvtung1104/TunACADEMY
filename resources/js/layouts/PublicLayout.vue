@@ -5,10 +5,9 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
-          <RouterLink to="/" class="flex items-center gap-2.5 shrink-0">
-            <div class="px-4 py-2 rounded-xl bg-[#d63015] flex items-center justify-center shadow-md shadow-red-200">
-              <span class="text-white font-black text-base tracking-tight italic">TunAcademy</span>
-            </div>
+          <RouterLink to="/" class="flex items-center gap-2 shrink-0">
+            <img src="/images/logo.png" alt="TunAcademy" class="h-9 w-auto object-contain" />
+            <span class="font-black text-base tracking-tight text-[#d63015]">TunAcademy</span>
           </RouterLink>
 
           <!-- Desktop Nav -->
@@ -142,8 +141,9 @@
         <div class="grid sm:grid-cols-3 gap-8 mb-10">
           <!-- Brand -->
           <div>
-            <div class="inline-flex px-4 py-2 rounded-xl bg-[#d63015] mb-4">
-              <span class="text-white font-black text-base italic tracking-tight">TunAcademy</span>
+            <div class="flex items-center gap-2 mb-4">
+              <img src="/images/logo.png" alt="TunAcademy" class="h-9 w-auto object-contain" />
+              <span class="font-black text-base text-white">TunAcademy</span>
             </div>
             <p class="text-sm text-white/40 leading-relaxed">
               Nền tảng học tập K-12 số 1 Việt Nam. Học mọi lúc, mọi nơi — hoàn toàn miễn phí.

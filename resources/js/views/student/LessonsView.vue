@@ -1,9 +1,18 @@
 <template>
   <div class="space-y-5">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between flex-wrap gap-3">
       <div>
         <h2 class="text-lg font-bold text-gray-900">Bài học của tôi</h2>
         <p class="text-sm text-gray-400 mt-0.5">Bài học từ các lớp bạn đang học</p>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-100 rounded-xl p-1">
+        <span class="px-4 py-1.5 rounded-lg text-sm font-medium bg-white text-indigo-600 shadow-sm">
+          Tất cả
+        </span>
+        <RouterLink to="/student/lessons/subjects"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+          Theo môn học
+        </RouterLink>
       </div>
     </div>
 
@@ -98,10 +107,14 @@ async function fetchData(page = 1) {
 }
 
 onMounted(async () => {
-  await fetchData()
-  // Load subjects from lessons for filter
+  // Load all lessons (no pagination) just to collect subjects for filter
+  const [, allRes] = await Promise.all([
+    fetchData(),
+    api.get('/student/lessons', { params: { per_page: 200 } }).catch(() => null),
+  ])
+  const all = allRes?.data?.data?.data ?? allRes?.data?.data ?? []
   const subjectSet = new Map()
-  lessons.value.forEach(l => { if (l.subject) subjectSet.set(l.subject.id, l.subject) })
+  all.forEach(l => { if (l.subject) subjectSet.set(l.subject.id, l.subject) })
   subjects.value = [...subjectSet.values()]
 })
 </script>

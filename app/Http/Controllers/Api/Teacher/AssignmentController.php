@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreAssignmentRequest;
-use App\Models\{Assignment, AssignmentSubmission};
+use App\Models\{Assignment, AssignmentSubmission, Classroom, User};
 use Illuminate\Http\Request;
 
 class AssignmentController extends Controller
@@ -64,6 +64,37 @@ class AssignmentController extends Controller
             'status'    => 'graded',
         ]);
         return $this->success($submission->fresh(), 'Chấm điểm thành công');
+    }
+
+    public function share(Request $request, Assignment $assignment)
+    {
+        $this->gate($request, $assignment);
+
+        $data = $request->validate([
+            'visibility'             => 'required|in:public,private,class,selected',
+            'target_classroom_ids'   => 'array',
+            'target_classroom_ids.*' => 'integer|exists:classrooms,id',
+            'target_student_ids'     => 'array',
+            'target_student_ids.*'   => 'integer|exists:users,id',
+        ]);
+
+        $assignment->update(['visibility' => $data['visibility']]);
+
+        if ($data['visibility'] === 'selected') {
+            $assignment->shares()->delete();
+
+            foreach ($data['target_classroom_ids'] ?? [] as $classroomId) {
+                $assignment->shares()->create(['target_type' => Classroom::class, 'target_id' => $classroomId]);
+            }
+
+            foreach ($data['target_student_ids'] ?? [] as $userId) {
+                $assignment->shares()->create(['target_type' => User::class, 'target_id' => $userId]);
+            }
+        } else {
+            $assignment->shares()->delete();
+        }
+
+        return $this->success(null, 'Cập nhật chia sẻ thành công');
     }
 
     public function uploadThumbnail(Request $request, Assignment $assignment)

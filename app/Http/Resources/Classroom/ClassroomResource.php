@@ -11,9 +11,10 @@ class ClassroomResource extends JsonResource
         return [
             'id'               => $this->id,
             'name'             => $this->name,
+            'room_code'        => $this->room_code,
             'max_students'     => $this->max_students,
             'status'           => $this->status,
-            'student_count'    => $this->whenLoaded('students', fn() => $this->students->count()),
+            'students_count'   => $this->students_count ?? ($this->relationLoaded('students') ? $this->students->count() : null),
             'grade'            => $this->whenLoaded('grade', fn() => [
                 'id'    => $this->grade->id,
                 'level' => $this->grade->level,

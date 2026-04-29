@@ -42,7 +42,7 @@
     <!-- Results table -->
     <div v-if="selectedExam" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div v-if="loading" class="py-12 text-center text-gray-400">
-        <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+        <div class="animate-spin w-6 h-6 border-2 border-[#d63015] border-t-transparent rounded-full mx-auto mb-2"></div>
         Đang tải kết quả...
       </div>
       <table v-else class="w-full text-sm">
@@ -63,7 +63,7 @@
             <td class="px-5 py-3 text-gray-400 text-xs font-mono">{{ i + 1 }}</td>
             <td class="px-5 py-3">
               <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-600 uppercase shrink-0">
+                <div class="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center text-xs font-semibold text-[#d63015] uppercase shrink-0">
                   {{ r.student?.name?.charAt(0) }}
                 </div>
                 <div>
@@ -146,5 +146,5 @@ onMounted(async () => {
 
 <style scoped>
 @reference "tailwindcss";
-.input { @apply px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm; }
+.input { @apply px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm; }
 </style>
