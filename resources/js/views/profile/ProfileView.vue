@@ -327,12 +327,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@stores/auth'
 import authApi from '@api/auth'
 import AvatarFrame from '@components/common/AvatarFrame.vue'
 
 const auth = useAuthStore()
+const { user: authUser } = storeToRefs(auth)
 
 const activeTab = ref('profile')
 const tabs = [
@@ -513,9 +515,17 @@ async function handleChangePassword() {
   }
 }
 
-onMounted(() => {
-  avatarPreview.value = auth.user?.avatar ?? null
+watch(authUser, (user) => {
+  if (!user) return
+  avatarPreview.value = user.avatar ?? null
   selectedFrame.value = initFrame()
   fillProfileForm()
+}, { immediate: true })
+
+onMounted(async () => {
+  if (!auth.user && auth.token) {
+    await auth.fetchUser().catch(() => {})
+  }
+  fetchFrames()
 })
 </script>

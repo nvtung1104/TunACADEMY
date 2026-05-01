@@ -69,24 +69,48 @@
 
           <!-- Materials -->
           <div v-if="lesson.materials?.length" class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div class="px-5 py-4 border-b border-gray-100">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 class="font-semibold text-gray-800">Tài liệu đính kèm</h3>
+              <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{{ lesson.materials.length }} file</span>
             </div>
             <div class="p-4 space-y-2">
-              <a v-for="m in lesson.materials" :key="m.id" :href="m.file_path" target="_blank"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors group">
-                <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                  <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
+              <div v-for="m in lesson.materials" :key="m.id"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 transition-all"
+                :class="materialHoverClass(m.file_type)">
+                <!-- Icon -->
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-bold"
+                  :class="materialBgClass(m.file_type)">
+                  {{ materialLabel(m.file_type) }}
                 </div>
+                <!-- Info -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-800 truncate group-hover:text-indigo-700">{{ m.title ?? m.file_name }}</p>
-                  <p class="text-xs text-gray-400">{{ m.file_type ?? 'Tài liệu' }}</p>
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ m.file_name }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ materialTypeName(m.file_type) }}</p>
                 </div>
-              </a>
+                <!-- Actions -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button @click="openPreview(m)"
+                    class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors"
+                    :class="materialActionClass(m.file_type)">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Xem
+                  </button>
+                  <a :href="m.url" :download="m.file_name"
+                    class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Tải về
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
+
+          <MaterialPreviewModal v-model="previewOpen" :material="previewMaterial" />
         </div>
 
         <!-- Sidebar -->
@@ -160,6 +184,7 @@ import { useRoute, RouterLink } from 'vue-router'
 import publicApi from '@api/public'
 import bookmarkApi from '@api/bookmarks'
 import { useAuthStore } from '@stores/auth'
+import MaterialPreviewModal from '@components/common/MaterialPreviewModal.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -167,6 +192,28 @@ const lesson = ref(null)
 const loading = ref(true)
 const saved = ref(false)
 const savePending = ref(false)
+const previewOpen = ref(false)
+const previewMaterial = ref(null)
+
+function openPreview(m) {
+  previewMaterial.value = m
+  previewOpen.value = true
+}
+function materialBgClass(type) {
+  return { pdf: 'bg-red-500', word: 'bg-blue-500', ppt: 'bg-orange-500' }[type] ?? 'bg-gray-400'
+}
+function materialHoverClass(type) {
+  return { pdf: 'hover:border-red-200 hover:bg-red-50', word: 'hover:border-blue-200 hover:bg-blue-50', ppt: 'hover:border-orange-200 hover:bg-orange-50' }[type] ?? 'hover:border-gray-200 hover:bg-gray-50'
+}
+function materialLabel(type) {
+  return { pdf: 'PDF', word: 'DOC', ppt: 'PPT' }[type] ?? 'FILE'
+}
+function materialTypeName(type) {
+  return { pdf: 'PDF Document', word: 'Word Document', ppt: 'PowerPoint' }[type] ?? 'Tài liệu'
+}
+function materialActionClass(type) {
+  return { pdf: 'bg-red-50 text-red-600 hover:bg-red-100', word: 'bg-blue-50 text-blue-600 hover:bg-blue-100', ppt: 'bg-orange-50 text-orange-600 hover:bg-orange-100' }[type] ?? 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+}
 
 async function toggleSave() {
   savePending.value = true

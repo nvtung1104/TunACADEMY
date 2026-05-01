@@ -3,8 +3,9 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Lesson\LessonResource;
-use App\Models\{Lesson, StudyProgress};
+use App\Models\{Lesson, LessonMaterial, StudyProgress};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LessonController extends Controller
 {
@@ -54,6 +55,17 @@ class LessonController extends Controller
             $data
         );
         return $this->success($progress, 'Cập nhật tiến độ thành công');
+    }
+
+    public function downloadMaterial(Request $request, Lesson $lesson, LessonMaterial $material)
+    {
+        $this->checkAccess($request, $lesson);
+        abort_if($material->lesson_id !== $lesson->id, 403);
+        abort_unless(Storage::disk('public')->exists($material->file_path), 404, 'File không tồn tại');
+
+        $material->increment('download_count');
+
+        return Storage::disk('public')->download($material->file_path, $material->file_name);
     }
 
     private function checkAccess(Request $request, Lesson $lesson): void

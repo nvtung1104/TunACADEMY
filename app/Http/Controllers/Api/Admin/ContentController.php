@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\Exam;
 use App\Models\Lesson;
+use App\Models\LessonMaterial;
 use App\Models\LiveSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ContentController extends Controller
 {
@@ -15,7 +17,7 @@ class ContentController extends Controller
 
     public function lessons(Request $request)
     {
-        $query = Lesson::with(['classroom.grade', 'subject:id,name,color', 'teacher:id,name'])
+        $query = Lesson::with(['classroom.grade', 'subject:id,name,color', 'teacher:id,name', 'materials'])
             ->when($request->subject_id, fn($q) => $q->where('subject_id', $request->subject_id))
             ->when($request->status,     fn($q) => $q->where('status', $request->status))
             ->when($request->search,     fn($q) => $q->where('title', 'like', "%{$request->search}%"));
@@ -25,7 +27,7 @@ class ContentController extends Controller
     public function storeLesson(Request $request)
     {
         $data = $request->validate([
-            'classroom_id' => 'required|exists:classrooms,id',
+            'classroom_id' => 'nullable|exists:classrooms,id',
             'subject_id'   => 'required|exists:subjects,id',
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
@@ -35,14 +37,15 @@ class ContentController extends Controller
             'status'       => 'sometimes|in:draft,published,hidden',
         ]);
 
+        $data['visibility'] = empty($data['classroom_id']) ? 'public' : 'class';
         $lesson = Lesson::create([...$data, 'teacher_id' => $request->user()->id]);
-        return $this->success($lesson->load(['classroom', 'subject']), 'Tạo bài học thành công', 201);
+        return $this->success($lesson->load(['classroom', 'subject', 'materials']), 'Tạo bài học thành công', 201);
     }
 
     public function updateLesson(Request $request, Lesson $lesson)
     {
         $data = $request->validate([
-            'classroom_id' => 'required|exists:classrooms,id',
+            'classroom_id' => 'nullable|exists:classrooms,id',
             'subject_id'   => 'required|exists:subjects,id',
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
@@ -52,14 +55,56 @@ class ContentController extends Controller
             'status'       => 'sometimes|in:draft,published,hidden',
         ]);
 
+        $data['visibility'] = empty($data['classroom_id']) ? 'public' : 'class';
         $lesson->update($data);
-        return $this->success($lesson->fresh(['classroom', 'subject']), 'Cập nhật thành công');
+        return $this->success($lesson->fresh(['classroom', 'subject', 'materials']), 'Cập nhật thành công');
     }
 
     public function deleteLesson(Lesson $lesson)
     {
+        foreach ($lesson->materials as $m) {
+            Storage::disk('public')->delete($m->file_path);
+        }
         $lesson->delete();
         return $this->success(null, 'Đã xóa bài học');
+    }
+
+    public function uploadMaterial(Request $request, Lesson $lesson)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:51200',
+        ]);
+
+        $file     = $request->file('file');
+        $ext      = strtolower($file->getClientOriginalExtension());
+        $fileType = match($ext) {
+            'pdf'         => 'pdf',
+            'doc', 'docx' => 'word',
+            'ppt', 'pptx' => 'ppt',
+            default       => 'other',
+        };
+        $path = $file->store("lessons/{$fileType}", 'public');
+
+        $material = $lesson->materials()->create([
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'file_type' => $fileType,
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+        ]);
+
+        return $this->success([
+            ...$material->toArray(),
+            'url' => asset('storage/' . $path),
+        ], 'Tải lên thành công', 201);
+    }
+
+    public function deleteMaterial(Lesson $lesson, LessonMaterial $material)
+    {
+        abort_if($material->lesson_id !== $lesson->id, 403);
+        Storage::disk('public')->delete($material->file_path);
+        $material->delete();
+        return $this->success(null, 'Đã xóa tài liệu');
     }
 
     // ─── Exams ───────────────────────────────────────────────────────────────

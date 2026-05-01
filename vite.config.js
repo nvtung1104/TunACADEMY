@@ -56,17 +56,12 @@ export default defineConfig({
         outDir: "public/build",
         emptyOutDir: true,
         target: "esnext",
-        minify: "terser",
-        terserOptions: {
-            compress: {
-                drop_console: true,
-            },
-        },
+        minify: true,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vue: ["vue"],
-                    laravel: ["@inertiajs/vue3", "axios"],
+                manualChunks(id) {
+                    if (id.includes('node_modules/vue')) return 'vue'
+                    if (id.includes('node_modules/axios')) return 'vendor'
                 },
             },
         },

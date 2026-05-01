@@ -6,6 +6,15 @@ services:
         container_name: tunacademy_laravel
         restart: unless-stopped
         working_dir: /var/www/html
+        env_file:
+            - .env
+        environment:
+            DB_CONNECTION: mysql
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_DATABASE: tunacademy
+            DB_USERNAME: tunacademy
+            DB_PASSWORD: tunacademy
         volumes:
             - .:/var/www/html
         networks:
@@ -36,10 +45,10 @@ services:
         container_name: tunacademy_mysql
         restart: unless-stopped
         environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-            MYSQL_DATABASE: ${DB_DATABASE:-tunacademy}
-            MYSQL_USER: ${DB_USERNAME:-tunacademy}
-            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: tunacademy
+            MYSQL_USER: tunacademy
+            MYSQL_PASSWORD: tunacademy
         ports:
             - "3307:3306"
         volumes:
@@ -55,9 +64,8 @@ services:
                     "ping",
                     "-h",
                     "localhost",
-                    "-u",
-                    "root",
-                    "-p${DB_ROOT_PASSWORD:-root}",
+                    "-uroot",
+                    "-proot",
                 ]
             interval: 10s
             timeout: 5s
@@ -82,14 +90,15 @@ services:
             retries: 5
 
     phpmyadmin:
-        image: phpmyadmin:latest
+        image: phpmyadmin/phpmyadmin:latest
         container_name: tunacademy_phpmyadmin
         restart: unless-stopped
         environment:
             PMA_HOST: mysql
             PMA_PORT: 3306
-            PMA_USER: root
-            PMA_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "8082:80"
         networks:
             - tunacademy
         depends_on:
@@ -102,6 +111,15 @@ services:
         container_name: tunacademy_reverb
         restart: unless-stopped
         working_dir: /var/www/html
+        env_file:
+            - .env
+        environment:
+            DB_CONNECTION: mysql
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_DATABASE: tunacademy
+            DB_USERNAME: tunacademy
+            DB_PASSWORD: tunacademy
         volumes:
             - .:/var/www/html
         command: php artisan reverb:start --host=0.0.0.0 --port=8080 --no-interaction
@@ -112,22 +130,6 @@ services:
         depends_on:
             - laravel
             - redis
-
-    coturn:
-        image: coturn/coturn:latest
-        container_name: tunacademy_coturn
-        restart: unless-stopped
-        ports:
-            - "3478:3478/udp"
-            - "3478:3478/tcp"
-            - "5349:5349/udp"
-            - "5349:5349/tcp"
-            - "50000-50050:50000-50050/udp"
-        volumes:
-            - ./docker/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
-        command: -c /etc/coturn/turnserver.conf
-        networks:
-            - tunacademy
 
 networks:
     tunacademy:

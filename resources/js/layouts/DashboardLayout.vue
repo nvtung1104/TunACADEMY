@@ -140,9 +140,6 @@
         </div>
       </header>
 
-      <!-- Help Widget -->
-      <HelpWidget />
-
       <!-- Content -->
       <main class="flex-1 overflow-y-auto p-5">
         <Transition name="fade" mode="out-in">
@@ -159,7 +156,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@stores/auth'
 import AvatarFrame from '@components/common/AvatarFrame.vue'
 import NotificationBell from '@components/common/NotificationBell.vue'
-import HelpWidget from '@components/common/HelpWidget.vue'
 
 const auth = useAuthStore()
 const route = useRoute()

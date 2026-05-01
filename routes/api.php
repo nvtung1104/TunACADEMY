@@ -120,10 +120,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('subjects/{subject}/avatar', [SubjectController::class, 'uploadAvatar']);
 
         Route::prefix('content')->group(function () {
-            Route::get('/lessons',                       [AdminContentController::class, 'lessons']);
-            Route::post('/lessons',                      [AdminContentController::class, 'storeLesson']);
-            Route::put('/lessons/{lesson}',              [AdminContentController::class, 'updateLesson']);
-            Route::delete('/lessons/{lesson}',           [AdminContentController::class, 'deleteLesson']);
+            Route::get('/lessons',                                          [AdminContentController::class, 'lessons']);
+            Route::post('/lessons',                                         [AdminContentController::class, 'storeLesson']);
+            Route::put('/lessons/{lesson}',                                 [AdminContentController::class, 'updateLesson']);
+            Route::delete('/lessons/{lesson}',                              [AdminContentController::class, 'deleteLesson']);
+            Route::post('/lessons/{lesson}/materials',                      [AdminContentController::class, 'uploadMaterial']);
+            Route::delete('/lessons/{lesson}/materials/{material}',         [AdminContentController::class, 'deleteMaterial']);
             Route::get('/exams',                         [AdminContentController::class, 'exams']);
             Route::post('/exams',                        [AdminContentController::class, 'storeExam']);
             Route::put('/exams/{exam}',                  [AdminContentController::class, 'updateExam']);
@@ -199,6 +201,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('lessons', [StudentLessonController::class, 'index']);
         Route::get('lessons/{lesson}', [StudentLessonController::class, 'show']);
         Route::post('lessons/{lesson}/progress', [StudentLessonController::class, 'updateProgress']);
+        Route::get('lessons/{lesson}/materials/{material}/download', [StudentLessonController::class, 'downloadMaterial']);
 
         Route::get('exams', [StudentExamController::class, 'index']);
         Route::get('exams/{exam}', [StudentExamController::class, 'show']);

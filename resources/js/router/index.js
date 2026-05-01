@@ -117,7 +117,7 @@ router.beforeEach(async (to) => {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
-  // Role guard for dashboard areas
+  // Role guard (only when user already loaded — avoids blocking on reload)
   if (to.meta.role && auth.user && auth.role !== to.meta.role) {
     return auth.homeRoute()
   }
