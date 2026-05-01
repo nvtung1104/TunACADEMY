@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use App\Models\AssignmentQuestion;
 use App\Models\Exam;
+use App\Models\ExamQuestion;
 use App\Models\Lesson;
 use App\Models\LessonMaterial;
 use App\Models\LiveSession;
@@ -113,6 +115,7 @@ class ContentController extends Controller
     {
         $query = Exam::with(['classroom.grade', 'subject:id,name,color', 'teacher:id,name'])
             ->when($request->subject_id, fn($q) => $q->where('subject_id', $request->subject_id))
+            ->when($request->type,       fn($q) => $q->where('type', $request->type))
             ->when($request->status,     fn($q) => $q->where('status', $request->status))
             ->when($request->search,     fn($q) => $q->where('title', 'like', "%{$request->search}%"));
         return response()->json($query->orderByDesc('created_at')->paginate(15));
@@ -174,6 +177,22 @@ class ContentController extends Controller
         return $this->success($exam->fresh(['classroom', 'subject']), 'Cập nhật thành công');
     }
 
+    public function examDetail(Exam $exam)
+    {
+        return $this->success($exam->load(['classroom.grade', 'subject:id,name,color', 'teacher:id,name']));
+    }
+
+    public function examAttempts(Request $request, Exam $exam)
+    {
+        $attempts = $exam->attempts()
+            ->with('student:id,name,email')
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->latest('submitted_at')
+            ->paginate(50);
+
+        return $this->success($attempts);
+    }
+
     public function deleteExam(Exam $exam)
     {
         $exam->delete();
@@ -227,6 +246,21 @@ class ContentController extends Controller
         return $this->success($assignment->fresh(['classroom', 'subject']), 'Cập nhật thành công');
     }
 
+    public function assignmentDetail(Assignment $assignment)
+    {
+        return $this->success($assignment->load(['classroom.grade', 'subject:id,name,color', 'teacher:id,name']));
+    }
+
+    public function assignmentSubmissions(Request $request, Assignment $assignment)
+    {
+        $submissions = $assignment->submissions()
+            ->with('student:id,name,email', 'gradedBy:id,name')
+            ->latest('submitted_at')
+            ->paginate(50);
+
+        return $this->success($submissions);
+    }
+
     public function deleteAssignment(Assignment $assignment)
     {
         $assignment->delete();
@@ -247,5 +281,97 @@ class ContentController extends Controller
     {
         $liveSession->delete();
         return $this->success(null, 'Đã xóa phòng học');
+    }
+
+    // ─── Exam Questions ──────────────────────────────────────────────────────
+
+    public function examQuestions(Exam $exam)
+    {
+        return $this->success($exam->questions()->get());
+    }
+
+    public function storeExamQuestion(Request $request, Exam $exam)
+    {
+        $data = $this->validateQuestion($request);
+        $data['order_index'] = $exam->questions()->max('order_index') + 1;
+        $question = $exam->questions()->create($data);
+        return $this->success($question->fresh(), 'Thêm câu hỏi thành công', 201);
+    }
+
+    public function updateExamQuestion(Request $request, Exam $exam, ExamQuestion $question)
+    {
+        abort_if($question->exam_id !== $exam->id, 403);
+        $question->update($this->validateQuestion($request));
+        return $this->success($question->fresh(), 'Cập nhật câu hỏi thành công');
+    }
+
+    public function deleteExamQuestion(Exam $exam, ExamQuestion $question)
+    {
+        abort_if($question->exam_id !== $exam->id, 403);
+        $question->delete();
+        return $this->success(null, 'Đã xóa câu hỏi');
+    }
+
+    // ─── Assignment Questions ────────────────────────────────────────────────
+
+    public function assignmentQuestions(Assignment $assignment)
+    {
+        return $this->success($assignment->questions()->get());
+    }
+
+    public function storeAssignmentQuestion(Request $request, Assignment $assignment)
+    {
+        $data = $this->validateQuestion($request);
+        $data['order_index'] = $assignment->questions()->max('order_index') + 1;
+        $question = $assignment->questions()->create($data);
+        return $this->success($question->fresh(), 'Thêm câu hỏi thành công', 201);
+    }
+
+    public function updateAssignmentQuestion(Request $request, Assignment $assignment, AssignmentQuestion $question)
+    {
+        abort_if($question->assignment_id !== $assignment->id, 403);
+        $question->update($this->validateQuestion($request));
+        return $this->success($question->fresh(), 'Cập nhật câu hỏi thành công');
+    }
+
+    public function deleteAssignmentQuestion(Assignment $assignment, AssignmentQuestion $question)
+    {
+        abort_if($question->assignment_id !== $assignment->id, 403);
+        $question->delete();
+        return $this->success(null, 'Đã xóa câu hỏi');
+    }
+
+    public function uploadAudio(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:mp3,wav,ogg,m4a,aac,webm|max:51200',
+        ]);
+
+        $path = $request->file('file')->store('media/audio', 'public');
+
+        return $this->success([
+            'path' => $path,
+            'url'  => asset('storage/' . $path),
+        ], 'Tải lên thành công', 201);
+    }
+
+    private function validateQuestion(Request $request): array
+    {
+        return $request->validate([
+            'type'           => 'required|in:multiple_choice,multiple_select,true_false,fill_blank,short_answer,essay,ordering,matching,listening,reading,speaking,writing,calculation,drag_drop,multi_step,data_analysis,map_analysis,chart_analysis,experiment,case_study,code_fill,code_debug,code_output,code_runner',
+            'content'        => 'required|string',
+            'difficulty'     => 'sometimes|in:easy,medium,hard',
+            'chapter_tag'    => 'nullable|string|max:100',
+            'options'        => 'nullable',
+            'correct_answer' => 'nullable',
+            'explanation'    => 'nullable|string',
+            'points'         => 'sometimes|numeric|min:0.25|max:100',
+            'order_index'    => 'sometimes|integer|min:0',
+            'media_type'     => 'nullable|in:image,audio,video',
+            'media_path'     => 'nullable|string|max:500',
+            'audio_path'     => 'nullable|string|max:500',
+            'sub_questions'  => 'nullable|array',
+            'metadata'       => 'nullable|array',
+        ]);
     }
 }

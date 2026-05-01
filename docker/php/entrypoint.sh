@@ -11,11 +11,13 @@ echo "==> MySQL ready."
 echo "==> Running migrations..."
 php artisan migrate --force --no-interaction
 
-echo "==> Caching config & routes..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
+if [ "$APP_ENV" = "production" ]; then
+    echo "==> Caching config & routes..."
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
+fi
 
 echo "==> Linking storage..."
 php artisan storage:link --quiet 2>/dev/null || true

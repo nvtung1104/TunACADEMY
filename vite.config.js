@@ -60,14 +60,17 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
-                    if (id.includes('node_modules/vue')) return 'vue'
-                    if (id.includes('node_modules/axios')) return 'vendor'
+                    if (id.includes('node_modules/firebase')) return 'firebase'
+                    if (id.includes('node_modules/@tiptap') || id.includes('node_modules/prosemirror')) return 'editor'
+                    if (id.includes('node_modules/chart.js') || id.includes('node_modules/vue-chartjs')) return 'charts'
+                    if (id.includes('node_modules/vue') || id.includes('node_modules/@vue') || id.includes('node_modules/pinia')) return 'vue'
+                    if (id.includes('node_modules/axios') || id.includes('node_modules/lodash')) return 'vendor'
                 },
             },
         },
         sourcemap: false,
     },
     optimizeDeps: {
-        include: ["vue"],
+        include: ["vue", "axios", "pinia", "@vueuse/core"],
     },
 });

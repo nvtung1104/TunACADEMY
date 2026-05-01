@@ -5,23 +5,30 @@ use App\Exports\{UsersExport, ExamResultsExport};
 use App\Http\Controllers\Controller;
 use App\Models\{User, Classroom, Exam, ExamAttempt, Lesson, Assignment};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
     public function overview()
     {
-        return $this->success([
-            'total_students'   => User::role('student')->count(),
-            'total_teachers'   => User::role('teacher')->count(),
-            'total_classrooms' => Classroom::count(),
-            'total_exams'      => Exam::count(),
-            'total_lessons'    => Lesson::count(),
-            'total_assignments'=> Assignment::count(),
-            'exams_this_month' => Exam::whereMonth('created_at', now()->month)->count(),
-            'attempts_this_month' => ExamAttempt::whereMonth('submitted_at', now()->month)->whereNotNull('submitted_at')->count(),
-            'avg_score_this_month'=> ExamAttempt::whereMonth('submitted_at', now()->month)->whereNotNull('score')->avg('score'),
-        ]);
+        $data = Cache::remember('report.overview', 300, function () {
+            $month = now()->month;
+            $year  = now()->year;
+            return [
+                'total_students'      => User::role('student')->count(),
+                'total_teachers'      => User::role('teacher')->count(),
+                'total_classrooms'    => Classroom::count(),
+                'total_exams'         => Exam::count(),
+                'total_lessons'       => Lesson::count(),
+                'total_assignments'   => Assignment::count(),
+                'exams_this_month'    => Exam::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+                'attempts_this_month' => ExamAttempt::whereYear('submitted_at', $year)->whereMonth('submitted_at', $month)->whereNotNull('submitted_at')->count(),
+                'avg_score_this_month'=> ExamAttempt::whereYear('submitted_at', $year)->whereMonth('submitted_at', $month)->whereNotNull('score')->avg('score'),
+            ];
+        });
+
+        return $this->success($data);
     }
 
     public function users(Request $request)

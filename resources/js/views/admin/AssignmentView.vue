@@ -54,7 +54,10 @@
                   {{ a.subject?.name?.[0] }}
                 </div>
                 <div>
-                  <p class="font-medium text-gray-800 line-clamp-1">{{ a.title }}</p>
+                  <button @click="$router.push(`/admin/assignments/${a.id}`)"
+                    class="font-medium text-gray-800 hover:text-[#d63015] transition-colors text-left line-clamp-1">
+                    {{ a.title }}
+                  </button>
                   <p class="text-xs text-gray-400">{{ a.subject?.name }} · {{ a.classroom?.name }}</p>
                 </div>
               </div>

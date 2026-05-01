@@ -36,14 +36,15 @@
           <tr>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Đề thi</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Loại</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Thời gian mở</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Bắt đầu</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Kết thúc</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
             <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Thao tác</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           <tr v-if="exams.length === 0">
-            <td colspan="5" class="py-14 text-center text-gray-400">
+            <td colspan="6" class="py-14 text-center text-gray-400">
               <svg class="w-10 h-10 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
@@ -76,8 +77,15 @@
                 <span class="text-xs text-green-600 font-medium">Luôn mở</span>
               </template>
               <template v-else>
-                <p class="text-xs text-gray-600">{{ e.opened_at ? formatDate(e.opened_at) : '—' }}</p>
-                <p v-if="e.closed_at" class="text-xs text-gray-400">→ {{ formatDate(e.closed_at) }}</p>
+                <p class="text-xs text-gray-800 font-medium">{{ e.opened_at ? formatDate(e.opened_at) : '—' }}</p>
+              </template>
+            </td>
+            <td class="px-5 py-3 hidden lg:table-cell">
+              <template v-if="e.type === 'practice_exam'">
+                <span class="text-xs text-gray-300">—</span>
+              </template>
+              <template v-else>
+                <p class="text-xs text-gray-800 font-medium">{{ e.closed_at ? formatDate(e.closed_at) : '—' }}</p>
               </template>
             </td>
             <td class="px-5 py-3">
