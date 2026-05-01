@@ -100,7 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ─── Admin ───────────────────────────────────────────────────────────────
 
-    Route::middleware('role:admin')->prefix('admin')->group(function () {
+    Route::middleware('role:admin')->prefix('admin')->as('admin.')->group(function () {
 
         Route::apiResource('users', AdminUserController::class);
         Route::post('users/{user}/assign-role', [AdminUserController::class, 'assignRole']);
@@ -148,7 +148,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ─── Teacher ─────────────────────────────────────────────────────────────
 
-    Route::middleware('role:teacher')->prefix('teacher')->group(function () {
+    Route::middleware('role:teacher')->prefix('teacher')->as('teacher.')->group(function () {
 
         Route::apiResource('classrooms', TeacherClassroomController::class);
         Route::get('my-subjects', [TeacherSubjectController::class, 'mySubjects']);
@@ -192,7 +192,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ─── Student ─────────────────────────────────────────────────────────────
 
-    Route::middleware('role:student')->prefix('student')->group(function () {
+    Route::middleware('role:student')->prefix('student')->as('student.')->group(function () {
 
         Route::get('classrooms', [StudentClassroomController::class, 'index']);
         Route::get('classrooms/{classroom}', [StudentClassroomController::class, 'show']);
