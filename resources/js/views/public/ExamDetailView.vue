@@ -88,14 +88,33 @@
         <!-- Sidebar -->
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
-            <RouterLink v-if="auth.isStudent" to="/student/exams"
-              class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors">
-              Vào trang thi
-            </RouterLink>
-            <RouterLink v-else-if="!auth.isLoggedIn" to="/login?redirect=/student/exams"
-              class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors">
-              Đăng nhập để thi
-            </RouterLink>
+            <!-- Draft in progress -->
+            <div v-if="draft" class="p-4 rounded-xl bg-amber-50 border border-amber-300 flex items-center gap-3 mb-1">
+              <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <p class="text-xs font-semibold text-amber-800">Đang làm dở</p>
+                <p class="text-xs text-amber-700">Còn <strong class="font-mono">{{ draftRemainingDisplay }}</strong></p>
+              </div>
+            </div>
+            <!-- Previous result -->
+            <div v-else-if="previousResult" class="p-4 rounded-xl bg-green-50 border border-green-200 text-center mb-1">
+              <p class="text-xs text-gray-500 mb-1">Kết quả lần làm gần nhất</p>
+              <p class="text-3xl font-black" :class="previousResult.score >= 5 ? 'text-green-600' : 'text-red-500'">
+                {{ previousResult.score }}<span class="text-base text-gray-400 font-normal">/10</span>
+              </p>
+              <p class="text-xs text-gray-500 mt-1">Đúng {{ previousResult.total_correct }}/{{ previousResult.total }} câu</p>
+            </div>
+            <button @click="openTakePage"
+              class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+              :class="draft ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-600 hover:bg-green-700'">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ draft ? `Làm tiếp (còn ${draftRemainingDisplay})` : previousResult ? 'Làm lại' : 'Xem trước & Làm bài' }}
+            </button>
 
             <button v-if="auth.isLoggedIn" @click="toggleSave" :disabled="savePending"
               class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors"
@@ -134,18 +153,63 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import publicApi from '@api/public'
 import bookmarkApi from '@api/bookmarks'
 import { useAuthStore } from '@stores/auth'
 
-const route = useRoute()
+const route  = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const exam = ref(null)
 const loading = ref(true)
 const saved = ref(false)
 const savePending = ref(false)
+const previousResult = ref(null)
+const draft = ref(null)
+const draftRemaining = ref(0)
+let draftTimer = null
+
+function checkDraft() {
+  clearInterval(draftTimer)
+  try {
+    const raw = localStorage.getItem(`exam_draft_${route.params.id}`)
+    if (!raw) { draft.value = null; return }
+    const d = JSON.parse(raw)
+    const elapsed = Math.floor((Date.now() - d.startedAt) / 1000)
+    const left = d.durationMinutes * 60 - elapsed
+    if (left > 0) {
+      draft.value = d
+      draftRemaining.value = left
+      draftTimer = setInterval(() => {
+        draftRemaining.value--
+        if (draftRemaining.value <= 0) { clearInterval(draftTimer); draft.value = null }
+      }, 1000)
+    } else { draft.value = null; draftRemaining.value = 0 }
+  } catch { draft.value = null }
+}
+
+const draftRemainingDisplay = computed(() => {
+  const m = Math.floor(draftRemaining.value / 60)
+  const s = draftRemaining.value % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+})
+
+function checkPreviousResult() {
+  try {
+    const stored = localStorage.getItem(`exam_result_${route.params.id}`)
+    if (stored) previousResult.value = JSON.parse(stored)
+  } catch {}
+}
+
+function openTakePage() {
+  router.push(`/exams/${route.params.id}/preview`)
+}
+
+function onVisibilityChange() {
+  if (!document.hidden) { checkDraft(); checkPreviousResult() }
+}
 
 async function toggleSave() {
   savePending.value = true
@@ -190,5 +254,13 @@ onMounted(async () => {
   if (auth.isLoggedIn) {
     try { const { data } = await bookmarkApi.check('exam', route.params.id); saved.value = data.saved } catch {}
   }
+  checkDraft()
+  checkPreviousResult()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+})
+
+onUnmounted(() => {
+  clearInterval(draftTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentQuestion;
+use App\Models\Classroom;
 use App\Models\Exam;
 use App\Models\ExamQuestion;
 use App\Models\Lesson;
@@ -12,6 +13,7 @@ use App\Models\LessonMaterial;
 use App\Models\LiveSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ContentController extends Controller
 {
@@ -275,6 +277,54 @@ class ContentController extends Controller
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->search, fn($q) => $q->where('title', 'like', "%{$request->search}%"));
         return response()->json($query->orderByDesc('created_at')->paginate(15));
+    }
+
+    public function storeLiveSession(Request $request)
+    {
+        $data = $request->validate([
+            'classroom_id'    => 'required|exists:classrooms,id',
+            'subject_id'      => 'nullable|exists:subjects,id',
+            'title'           => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'scheduled_at'    => 'nullable|date',
+            'duration_minutes'=> 'integer|min:15|max:480',
+            'max_participants'=> 'integer|min:2|max:500',
+        ]);
+
+        $classroom = Classroom::find($data['classroom_id']);
+        $data['teacher_id']  = $classroom->teacher_id ?? $request->user()->id;
+        $data['room_code']   = Str::upper(Str::random(8));
+        $data['status']      = 'scheduled';
+        $data['is_permanent']= false;
+
+        $session = LiveSession::create($data);
+        return $this->success(
+            $session->load(['classroom.grade', 'teacher:id,name', 'subject:id,name,color']),
+            'Tạo phòng học thành công', 201
+        );
+    }
+
+    public function createLiveSessionsForAll(Request $request)
+    {
+        $classrooms = Classroom::whereDoesntHave('liveSessions', fn($q) => $q->where('is_permanent', true))
+            ->get();
+
+        $created = 0;
+        foreach ($classrooms as $classroom) {
+            LiveSession::create([
+                'classroom_id'    => $classroom->id,
+                'teacher_id'      => $classroom->teacher_id ?? $request->user()->id,
+                'title'           => 'Phòng học ' . $classroom->name,
+                'room_code'       => Str::upper(Str::random(8)),
+                'status'          => 'scheduled',
+                'is_permanent'    => true,
+                'duration_minutes'=> 45,
+                'max_participants'=> 50,
+            ]);
+            $created++;
+        }
+
+        return $this->success(['created' => $created], "Đã tạo {$created} phòng học");
     }
 
     public function deleteLiveSession(LiveSession $liveSession)

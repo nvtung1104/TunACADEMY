@@ -20,7 +20,7 @@ class AssignmentController extends Controller
     {
         $this->checkAccess($request, $assignment);
         $submission = $assignment->submissions()->where('student_id', $request->user()->id)->first();
-        return $this->success(['assignment' => $assignment->load('subject'), 'submission' => $submission]);
+        return $this->success(['assignment' => $assignment->load(['subject', 'questions']), 'submission' => $submission]);
     }
 
     public function submit(Request $request, Assignment $assignment)

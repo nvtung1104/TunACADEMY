@@ -77,14 +77,22 @@
         <!-- Sidebar -->
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
-            <RouterLink v-if="auth.isStudent" to="/student/assignments"
+            <div v-if="previousResult" class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-center mb-1">
+              <p class="text-xs text-gray-500 mb-1">Kết quả lần làm gần nhất</p>
+              <p v-if="previousResult.score != null" class="text-3xl font-black" :class="previousResult.score >= 5 ? 'text-green-600' : 'text-red-500'">
+                {{ previousResult.score }}<span class="text-base text-gray-400 font-normal">/10</span>
+              </p>
+              <p v-else class="text-sm font-medium text-amber-700">Đã hoàn thành</p>
+              <p v-if="previousResult.total" class="text-xs text-gray-500 mt-1">Đúng {{ previousResult.total_correct }}/{{ previousResult.total }} câu</p>
+            </div>
+            <button @click="openDoPage"
               class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition-colors">
-              Vào trang bài tập
-            </RouterLink>
-            <RouterLink v-else-if="!auth.isLoggedIn" to="/login?redirect=/student/assignments"
-              class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition-colors">
-              Đăng nhập để làm bài
-            </RouterLink>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ previousResult ? 'Làm lại' : 'Xem trước & Làm bài' }}
+            </button>
 
             <button v-if="auth.isLoggedIn" @click="toggleSave" :disabled="savePending"
               class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors"
@@ -123,15 +131,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import publicApi from '@api/public'
 import { useAuthStore } from '@stores/auth'
 
-const route = useRoute()
-const auth = useAuthStore()
+const route  = useRoute()
+const router = useRouter()
+const auth   = useAuthStore()
 const assignment = ref(null)
 const loading = ref(true)
+const previousResult = ref(null)
+
+function checkPreviousResult() {
+  try {
+    const stored = localStorage.getItem(`assignment_result_${route.params.id}`)
+    if (stored) previousResult.value = JSON.parse(stored)
+  } catch {}
+}
+
+function openDoPage() {
+  router.push(`/practice/${route.params.id}/preview`)
+}
+
+function onVisibilityChange() {
+  if (!document.hidden) checkPreviousResult()
+}
 
 const typeLabel = computed(() => {
   const map = { homework: 'Bài tập', project: 'Dự án', essay: 'Bài luận', quiz: 'Kiểm tra nhanh' }
@@ -157,5 +182,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  checkPreviousResult()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
+
+onUnmounted(() => document.removeEventListener('visibilitychange', onVisibilityChange))
 </script>

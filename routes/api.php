@@ -40,9 +40,13 @@ Route::prefix('public')->group(function () {
     Route::get('/lessons', [PublicController::class, 'lessons']);
     Route::get('/lessons/{lesson}', [PublicController::class, 'lesson']);
     Route::get('/exams', [PublicController::class, 'exams']);
-    Route::get('/exams/{exam}', [PublicController::class, 'exam']);
+    Route::get('/exams/{id}', [PublicController::class, 'exam']);
+    Route::get('/exams/{id}/take', [PublicController::class, 'examTake']);
+    Route::post('/exams/{id}/submit', [PublicController::class, 'examSubmit']);
     Route::get('/assignments', [PublicController::class, 'assignments']);
-    Route::get('/assignments/{assignment}', [PublicController::class, 'assignment']);
+    Route::get('/assignments/{id}', [PublicController::class, 'assignment']);
+    Route::get('/assignments/{id}/take', [PublicController::class, 'assignmentTake']);
+    Route::post('/assignments/{id}/submit', [PublicController::class, 'assignmentSubmit']);
     Route::get('/classrooms', [PublicController::class, 'classrooms']);
 });
 
@@ -147,8 +151,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/assignments/{assignment}/questions',              [AdminContentController::class, 'storeAssignmentQuestion']);
             Route::put('/assignments/{assignment}/questions/{question}',    [AdminContentController::class, 'updateAssignmentQuestion']);
             Route::delete('/assignments/{assignment}/questions/{question}', [AdminContentController::class, 'deleteAssignmentQuestion']);
-            Route::get('/live-sessions',                 [AdminContentController::class, 'liveSessions']);
-            Route::delete('/live-sessions/{liveSession}',[AdminContentController::class, 'deleteLiveSession']);
+            Route::get('/live-sessions',                        [AdminContentController::class, 'liveSessions']);
+            Route::post('/live-sessions',                       [AdminContentController::class, 'storeLiveSession']);
+            Route::post('/live-sessions/create-for-all',        [AdminContentController::class, 'createLiveSessionsForAll']);
+            Route::delete('/live-sessions/{liveSession}',       [AdminContentController::class, 'deleteLiveSession']);
         });
 
         Route::prefix('reports')->group(function () {
