@@ -282,7 +282,7 @@ class ContentController extends Controller
     public function storeLiveSession(Request $request)
     {
         $data = $request->validate([
-            'classroom_id'    => 'required|exists:classrooms,id',
+            'classroom_id'    => 'nullable|exists:classrooms,id',
             'subject_id'      => 'nullable|exists:subjects,id',
             'title'           => 'required|string|max:255',
             'description'     => 'nullable|string',
@@ -291,8 +291,13 @@ class ContentController extends Controller
             'max_participants'=> 'integer|min:2|max:500',
         ]);
 
-        $classroom = Classroom::find($data['classroom_id']);
-        $data['teacher_id']  = $classroom->teacher_id ?? $request->user()->id;
+        if (!empty($data['classroom_id'])) {
+            $classroom = Classroom::find($data['classroom_id']);
+            $data['teacher_id'] = $classroom->teacher_id ?? $request->user()->id;
+        } else {
+            $data['classroom_id'] = null;
+            $data['teacher_id']   = $request->user()->id;
+        }
         $data['room_code']   = Str::upper(Str::random(8));
         $data['status']      = 'scheduled';
         $data['is_permanent']= false;

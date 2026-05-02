@@ -3,6 +3,7 @@ import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
+import fs from "fs";
 
 export default defineConfig({
     plugins: [
@@ -39,9 +40,14 @@ export default defineConfig({
     server: {
         host: "0.0.0.0",
         port: 5175,
+        https: {
+            key:  fs.readFileSync("C:/laragon/etc/ssl/laragon.key"),
+            cert: fs.readFileSync("C:/laragon/etc/ssl/laragon.crt"),
+        },
         hmr: {
             host: "tunacademy.test",
             port: 5175,
+            protocol: "wss",
         },
         watch: {
             ignored: [

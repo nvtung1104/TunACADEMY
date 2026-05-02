@@ -96,7 +96,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Live / WebRTC (teachers + students)
     Route::prefix('live')->group(function () {
-        Route::get('/ice-servers', [WebRTCController::class, 'iceServers']);
+        Route::get('/ice-servers',                  [WebRTCController::class, 'iceServers']);
+        Route::get('/rooms/{room}/info',            [WebRTCController::class, 'sessionInfo']);
+        Route::get('/rooms/{room}/signals',         [WebRTCController::class, 'pollSignals']);
+        Route::get('/rooms/{room}/messages',        [WebRTCController::class, 'getMessages']);
+        Route::post('/rooms/{room}/message',        [WebRTCController::class, 'sendMessage']);
         Route::post('/signal', [WebRTCController::class, 'signal']);
         Route::post('/rooms/{room}/join', [WebRTCController::class, 'joinRoom']);
         Route::post('/rooms/{room}/leave', [WebRTCController::class, 'leaveRoom']);

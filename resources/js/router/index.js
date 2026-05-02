@@ -108,6 +108,8 @@ const router = createRouter({
     // ─── Standalone fullscreen pages (no layout, no navbar) ──────────────────
     { path: '/exams/:id/take', component: () => import('@/views/public/PublicExamTakeView.vue') },
     { path: '/practice/:id/do', component: () => import('@/views/public/PublicAssignmentDoView.vue') },
+    { path: '/live/:id/lobby', component: () => import('@/views/live/LiveLobbyView.vue'), meta: { auth: true } },
+    { path: '/live/:id/room', component: () => import('@/views/live/LiveRoomView.vue'), meta: { auth: true } },
 
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -50,6 +51,13 @@ class User extends Authenticatable
     public function homeroomClassrooms(): HasMany
     {
         return $this->hasMany(Classroom::class, 'homeroom_teacher_id');
+    }
+
+    public function classrooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Classroom::class, 'classroom_students', 'student_id', 'classroom_id')
+            ->withPivot('joined_at', 'left_at', 'status')
+            ->wherePivot('status', 'active');
     }
 
     public function classroomStudents(): HasMany

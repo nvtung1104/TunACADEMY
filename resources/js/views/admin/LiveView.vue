@@ -73,10 +73,18 @@
             <span class="text-xs text-gray-400">Mã:</span>
             <code class="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">{{ s.room_code }}</code>
           </div>
-          <button @click="confirmDelete(s)" class="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-xl transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            Xóa phòng học
-          </button>
+          <div class="flex gap-2">
+            <button @click="router.push(`/live/${s.id}/lobby`)"
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-colors"
+              :class="s.status === 'live' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              Vào phòng
+            </button>
+            <button @click="confirmDelete(s)" class="flex items-center justify-center gap-1 px-3 py-2 text-xs text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Xóa
+            </button>
+          </div>
         </div>
       </template>
     </div>
@@ -87,10 +95,10 @@
     <AppModal v-model="createModal" title="Tạo phòng học mới" size="md">
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Lớp học <span class="text-red-500">*</span></label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Lớp học <span class="text-gray-400 font-normal">(để trống = phòng công khai)</span></label>
           <select v-model="form.classroom_id" @change="onClassroomChange"
             class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-            <option value="">-- Chọn lớp học --</option>
+            <option value="">-- Phòng học công khai (không thuộc lớp nào) --</option>
             <option v-for="c in classrooms" :key="c.id" :value="c.id">{{ c.name }} ({{ c.grade?.name }})</option>
           </select>
         </div>
@@ -162,10 +170,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 import Pagination from '@components/common/Pagination.vue'
 
+const router = useRouter()
 const sessions = ref([])
 const loading = ref(true)
 const search = ref('')
@@ -222,7 +232,6 @@ async function openCreate() {
 }
 
 async function doCreate() {
-  if (!form.value.classroom_id) { createError.value = 'Vui lòng chọn lớp học'; return }
   if (!form.value.title.trim()) { createError.value = 'Vui lòng nhập tên phòng học'; return }
   creating.value = true; createError.value = ''
   try {

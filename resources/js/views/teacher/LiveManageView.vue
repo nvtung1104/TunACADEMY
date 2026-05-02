@@ -87,8 +87,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@api/axios'
 
+const router = useRouter()
 const classrooms = ref([])
 const loading = ref(true)
 
@@ -144,7 +146,7 @@ async function endRoom(c) {
 }
 
 function openRoom(c) {
-  alert(`Phòng học ${c.name}\nMã phòng: ${c.room_code}\n\nTính năng WebRTC đang được tích hợp.`)
+  router.push(`/live/${c.session.id}/lobby`)
 }
 
 onMounted(fetchRooms)
