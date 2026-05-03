@@ -95,6 +95,11 @@
             </div>
             <div class="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <span class="text-xs font-semibold text-gray-500 mr-2">{{ q.default_points ?? 1 }}đ</span>
+              <button @click="openAddModal(q)" class="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors" title="Thêm vào đề/bài tập">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </button>
               <RouterLink v-if="!showPublicBank" :to="`/teacher/question-bank/${q.id}/edit`"
                 class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors" title="Chỉnh sửa">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +130,79 @@
     </div>
 
   </div>
+
+  <!-- Modal: Thêm vào đề thi / bài tập -->
+  <Teleport to="body">
+    <div v-if="addModal.show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" @click.self="addModal.show = false">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5">Thêm câu hỏi vào</p>
+            <h3 class="text-sm font-semibold text-gray-800 line-clamp-1" v-html="addModal.question?.content"></h3>
+          </div>
+          <button @click="addModal.show = false" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-100">
+          <button @click="addModal.tab = 'exam'" class="flex-1 py-2.5 text-sm font-medium transition-colors"
+            :class="addModal.tab === 'exam' ? 'text-[#d63015] border-b-2 border-[#d63015]' : 'text-gray-500 hover:text-gray-700'">
+            Đề thi
+          </button>
+          <button @click="addModal.tab = 'assignment'" class="flex-1 py-2.5 text-sm font-medium transition-colors"
+            :class="addModal.tab === 'assignment' ? 'text-[#d63015] border-b-2 border-[#d63015]' : 'text-gray-500 hover:text-gray-700'">
+            Bài tập
+          </button>
+        </div>
+
+        <!-- List -->
+        <div class="max-h-72 overflow-y-auto">
+          <div v-if="addModal.loadingList" class="py-10 text-center text-gray-400 text-sm">Đang tải...</div>
+          <template v-else>
+            <div v-if="addModal.tab === 'exam'">
+              <div v-if="modalExams.length === 0" class="py-10 text-center text-gray-400 text-sm">Chưa có đề thi nào</div>
+              <button v-for="e in modalExams" :key="e.id" @click="addToTarget(e.id)"
+                :disabled="addModal.adding === e.id"
+                class="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0">
+                <div>
+                  <p class="text-sm font-medium text-gray-800">{{ e.title }}</p>
+                  <p class="text-xs text-gray-400">{{ e.subject?.name }} · {{ e.questions_count ?? 0 }} câu</p>
+                </div>
+                <div v-if="addModal.adding === e.id" class="animate-spin w-4 h-4 border-2 border-[#d63015] border-t-transparent rounded-full shrink-0"></div>
+                <div v-else-if="addModal.added.includes(`exam-${e.id}`)" class="text-green-500 shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <svg v-else class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </button>
+            </div>
+            <div v-else>
+              <div v-if="modalAssignments.length === 0" class="py-10 text-center text-gray-400 text-sm">Chưa có bài tập nào</div>
+              <button v-for="a in modalAssignments" :key="a.id" @click="addToTarget(a.id)"
+                :disabled="addModal.adding === a.id"
+                class="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0">
+                <div>
+                  <p class="text-sm font-medium text-gray-800">{{ a.title }}</p>
+                  <p class="text-xs text-gray-400">{{ a.subject?.name }} · {{ a.questions_count ?? 0 }} câu</p>
+                </div>
+                <div v-if="addModal.adding === a.id" class="animate-spin w-4 h-4 border-2 border-[#d63015] border-t-transparent rounded-full shrink-0"></div>
+                <div v-else-if="addModal.added.includes(`assignment-${a.id}`)" class="text-green-500 shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <svg v-else class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -138,6 +216,51 @@ const loading = ref(true)
 const showPublicBank = ref(false)
 const meta = ref({ current_page: 1, last_page: 1, total: 0 })
 const filters = reactive({ search: '', type: '', difficulty: '', subject_id: '', page: 1 })
+
+// ── Modal thêm vào đề/bài tập ────────────────────────────────────────────────
+const addModal = reactive({ show: false, question: null, tab: 'exam', loadingList: false, adding: null, added: [] })
+const modalExams = ref([])
+const modalAssignments = ref([])
+
+async function openAddModal(q) {
+  addModal.question = q
+  addModal.tab = 'exam'
+  addModal.adding = null
+  addModal.added = []
+  addModal.show = true
+  addModal.loadingList = true
+  try {
+    const [eRes, aRes] = await Promise.all([
+      api.get('/teacher/exams', { params: { per_page: 100 } }),
+      api.get('/teacher/assignments', { params: { per_page: 100 } }),
+    ])
+    const unpack = (res) => {
+      const d = res.data?.data
+      return Array.isArray(d) ? d : (d?.data ?? [])
+    }
+    modalExams.value = unpack(eRes)
+    modalAssignments.value = unpack(aRes)
+  } finally {
+    addModal.loadingList = false
+  }
+}
+
+async function addToTarget(targetId) {
+  const key = `${addModal.tab}-${targetId}`
+  if (addModal.added.includes(key)) return
+  addModal.adding = targetId
+  try {
+    const url = addModal.tab === 'exam'
+      ? `/teacher/exams/${targetId}/import-questions`
+      : `/teacher/assignments/${targetId}/import-questions`
+    await api.post(url, { question_ids: [addModal.question.id] })
+    addModal.added.push(key)
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Không thể thêm câu hỏi')
+  } finally {
+    addModal.adding = null
+  }
+}
 
 let debounceTimer = null
 function debounceFetch() {

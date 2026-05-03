@@ -207,6 +207,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('question-bank', QuestionBankController::class);
         Route::get('question-bank-public', [QuestionBankController::class, 'publicBank']);
 
+        Route::post('assignments/{assignment}/import-questions', [QuestionBankController::class, 'importToAssignment']);
         Route::apiResource('assignments', TeacherAssignmentController::class);
         Route::post('assignments/{assignment}/share', [TeacherAssignmentController::class, 'share']);
         Route::post('assignments/{assignment}/thumbnail', [TeacherAssignmentController::class, 'uploadThumbnail']);

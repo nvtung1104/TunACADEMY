@@ -176,6 +176,10 @@
           <label class="label">SĐT phụ huynh</label>
           <input v-model="form.parent_phone" class="input" />
         </div>
+        <div>
+          <label class="label">Gmail phụ huynh</label>
+          <input v-model="form.parent_email" type="email" class="input" placeholder="gmail@gmail.com" />
+        </div>
         <div class="col-span-2">
           <label class="label">Địa chỉ phụ huynh</label>
           <input v-model="form.parent_address" class="input" />
@@ -305,7 +309,7 @@ function onRoleChange() {
 const emptyForm = {
   name: '', email: '', password: '', role: 'student', phone: '', status: 'active',
   date_of_birth: '', gender: '', address: '', qualification: '',
-  parent_name: '', parent_phone: '', parent_address: '',
+  parent_name: '', parent_phone: '', parent_email: '', parent_address: '',
   classroom_id: '',
 }
 const form = reactive({ ...emptyForm })

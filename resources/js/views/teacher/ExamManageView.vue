@@ -263,6 +263,28 @@
             </select>
           </div>
         </div>
+        <!-- Câu hỏi từ ngân hàng (chỉ khi tạo mới) -->
+        <div v-if="!editItem">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">Câu hỏi từ ngân hàng</label>
+            <button type="button" @click="openPicker"
+              class="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 font-medium transition-colors">
+              + Chọn câu hỏi
+            </button>
+          </div>
+          <div v-if="pickedQuestions.length === 0" class="text-xs text-gray-400 bg-gray-50 rounded-xl p-3 text-center border border-dashed border-gray-200">
+            Chưa chọn câu hỏi nào từ ngân hàng
+          </div>
+          <ul v-else class="space-y-1.5 max-h-40 overflow-y-auto">
+            <li v-for="q in pickedQuestions" :key="q.id"
+              class="flex items-center justify-between gap-2 bg-indigo-50 rounded-lg px-3 py-2 text-xs border border-indigo-100">
+              <span class="truncate text-gray-700">{{ q.content }}</span>
+              <button type="button" @click="pickedQuestions = pickedQuestions.filter(x => x.id !== q.id)"
+                class="shrink-0 text-gray-400 hover:text-red-500 transition-colors">&times;</button>
+            </li>
+          </ul>
+        </div>
+
         <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
       </form>
       <template #footer>
@@ -341,6 +363,59 @@
         </tbody>
       </table>
     </AppModal>
+
+    <!-- Question Picker Modal -->
+    <Teleport to="body">
+      <div v-if="pickerModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="pickerModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-800">Chọn câu hỏi từ ngân hàng</h3>
+            <button @click="pickerModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+          </div>
+          <div class="px-6 py-3 border-b border-gray-100 flex gap-2">
+            <input v-model="pickerSearch" @input="debouncePicker" type="text" placeholder="Tìm câu hỏi..."
+              class="input flex-1 text-sm" />
+            <select v-model="pickerSubject" @change="fetchPicker" class="input text-sm w-36">
+              <option value="">Tất cả môn</option>
+              <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div class="flex-1 overflow-y-auto px-6 py-3">
+            <div v-if="pickerLoading" class="text-center py-8 text-gray-400 text-sm">Đang tải...</div>
+            <div v-else-if="pickerList.length === 0" class="text-center py-8 text-gray-400 text-sm">Không có câu hỏi</div>
+            <ul v-else class="space-y-2">
+              <li v-for="q in pickerList" :key="q.id"
+                class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                :class="pickerSelected.has(q.id) ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'"
+                @click="pickerSelected.has(q.id) ? pickerSelected.delete(q.id) : pickerSelected.add(q.id)">
+                <input type="checkbox" :checked="pickerSelected.has(q.id)" @click.stop
+                  @change="pickerSelected.has(q.id) ? pickerSelected.delete(q.id) : pickerSelected.add(q.id)"
+                  class="mt-0.5 text-indigo-600 rounded" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-800 line-clamp-2">{{ q.content }}</p>
+                  <div class="flex gap-2 mt-1">
+                    <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{{ typeLabel(q.type) }}</span>
+                    <span class="text-[11px] px-1.5 py-0.5 rounded font-medium" :class="diffClass(q.difficulty)">{{ diffLabel(q.difficulty) }}</span>
+                    <span v-if="q.subject" class="text-[11px] text-gray-400">{{ q.subject.name }}</span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-sm text-gray-500">Đã chọn: <strong>{{ pickerSelected.size }}</strong> câu</span>
+            <div class="flex gap-2">
+              <button @click="pickerModal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
+              <button @click="confirmPicker" :disabled="pickerSelected.size === 0"
+                class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                Thêm {{ pickerSelected.size > 0 ? pickerSelected.size + ' câu' : '' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -372,6 +447,15 @@ const form = reactive({
   shuffle_questions: false, shuffle_options: false,
   proctoring_enabled: false, allow_retake: false,
 })
+
+const pickedQuestions = ref([])
+const pickerModal = ref(false)
+const pickerList = ref([])
+const pickerLoading = ref(false)
+const pickerSelected = ref(new Set())
+const pickerSearch = ref('')
+const pickerSubject = ref('')
+let pickerDebounce = null
 
 const grades = computed(() => {
   const map = new Map()
@@ -420,6 +504,7 @@ function openCreate() {
     duration_minutes: 15, opened_at: '', closed_at: '', visibility: 'private',
     shuffle_questions: false, shuffle_options: false, proctoring_enabled: false, allow_retake: false,
   })
+  pickedQuestions.value = []
   formError.value = ''
   modal.value = true
 }
@@ -465,8 +550,17 @@ async function save() {
     if (!payload.opened_at) delete payload.opened_at
     if (!payload.closed_at) delete payload.closed_at
     if (!payload.classroom_id) delete payload.classroom_id
-    if (editItem.value) await api.put(`/teacher/exams/${editItem.value.id}`, payload)
-    else await api.post('/teacher/exams', payload)
+    if (editItem.value) {
+      await api.put(`/teacher/exams/${editItem.value.id}`, payload)
+    } else {
+      const { data } = await api.post('/teacher/exams', payload)
+      const examId = data.data?.id
+      if (examId && pickedQuestions.value.length > 0) {
+        await api.post(`/teacher/exams/${examId}/import-questions`, {
+          question_ids: pickedQuestions.value.map(q => q.id),
+        }).catch(() => {})
+      }
+    }
     modal.value = false; fetch()
   } catch (e) { formError.value = e.response?.data?.message ?? 'Có lỗi xảy ra' }
   finally { saving.value = false }
@@ -494,6 +588,36 @@ async function deleteExam(e) {
   try { await api.delete(`/teacher/exams/${e.id}`); fetch() }
   catch (err) { alert(err.response?.data?.message ?? 'Không thể xóa') }
 }
+
+function debouncePicker() {
+  clearTimeout(pickerDebounce)
+  pickerDebounce = setTimeout(fetchPicker, 350)
+}
+async function fetchPicker() {
+  pickerLoading.value = true
+  try {
+    const { data } = await api.get('/teacher/question-bank', {
+      params: { search: pickerSearch.value || undefined, subject_id: pickerSubject.value || undefined },
+    })
+    pickerList.value = data.data?.data ?? data.data ?? []
+  } finally { pickerLoading.value = false }
+}
+function openPicker() {
+  pickerSelected.value = new Set(pickedQuestions.value.map(q => q.id))
+  pickerSearch.value = ''
+  pickerSubject.value = ''
+  fetchPicker()
+  pickerModal.value = true
+}
+function confirmPicker() {
+  const selectedIds = [...pickerSelected.value]
+  const existing = pickerList.value.filter(q => selectedIds.includes(q.id))
+  const alreadyIds = new Set(pickedQuestions.value.map(q => q.id))
+  existing.forEach(q => { if (!alreadyIds.has(q.id)) pickedQuestions.value.push(q) })
+  pickerModal.value = false
+}
+function diffLabel(d) { return { easy: 'Dễ', medium: 'TB', hard: 'Khó' }[d] ?? d }
+function diffClass(d) { return { easy: 'bg-green-100 text-green-700', medium: 'bg-yellow-100 text-yellow-700', hard: 'bg-red-100 text-red-700' }[d] ?? 'bg-gray-100 text-gray-500' }
 
 function typeLabel(t) {
   return { quiz_15: 'KT 15p', quiz_30: 'KT 30p', quiz_45: 'KT 45p', practice_exam: 'Ôn tập' }[t] ?? t

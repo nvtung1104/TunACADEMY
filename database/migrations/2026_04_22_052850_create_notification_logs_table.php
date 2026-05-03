@@ -9,7 +9,7 @@ return new class extends Migration {
         Schema::create('notification_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('channel', ['email', 'push', 'in_app']);
+            $table->enum('channel', ['email']);
             $table->string('type', 100);
             $table->json('payload')->nullable();
             $table->enum('status', ['success', 'failed', 'pending'])->default('pending');

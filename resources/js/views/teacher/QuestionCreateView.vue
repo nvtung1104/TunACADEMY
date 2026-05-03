@@ -586,9 +586,9 @@ async function save() {
 
     if (targetType.value && targetId.value && questionId) {
       const endpoint = targetType.value === 'exam'
-        ? `/teacher/exams/${targetId.value}/questions`
-        : `/teacher/assignments/${targetId.value}/questions`
-      await api.post(endpoint, { question_id: questionId }).catch(() => {})
+        ? `/teacher/exams/${targetId.value}/import-questions`
+        : `/teacher/assignments/${targetId.value}/import-questions`
+      await api.post(endpoint, { question_ids: [questionId] }).catch(() => {})
     }
 
     router.push('/teacher/question-bank')
