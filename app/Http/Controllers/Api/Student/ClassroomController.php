@@ -24,11 +24,17 @@ class ClassroomController extends Controller
     {
         $classroomIds = $request->user()->classrooms()->pluck('classrooms.id');
 
-        $sessions = LiveSession::whereIn('classroom_id', $classroomIds)
-            ->where('is_permanent', true)
-            ->with(['classroom:id,name,room_code', 'teacher:id,name,avatar'])
-            ->orderByRaw("FIELD(status, 'live', 'scheduled', 'ended')")
-            ->get();
+        $sessions = LiveSession::with(['classroom:id,name,room_code', 'teacher:id,name,avatar'])
+            ->where(function ($q) use ($classroomIds) {
+                $q->whereIn('classroom_id', $classroomIds)
+                  ->orWhereNull('classroom_id');
+            })
+            ->whereIn('status', ['scheduled', 'live'])
+            ->orderByRaw("FIELD(status, 'live', 'scheduled')")
+            ->orderByDesc('created_at')
+            ->get()
+            ->unique(fn($s) => $s->classroom_id ?? 'public_' . $s->id)
+            ->values();
 
         return $this->success($sessions);
     }

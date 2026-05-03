@@ -3,7 +3,7 @@ services:
     image: YOUR_DOCKERHUB_USERNAME/tunacademy:latest
     container_name: tunacademy_laravel
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.docker
     volumes:
       - storage_data:/var/www/html/storage/app/public
     networks:
@@ -71,7 +71,7 @@ services:
     image: YOUR_DOCKERHUB_USERNAME/tunacademy:latest
     container_name: tunacademy_reverb
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.docker
     command: php artisan reverb:start --host=0.0.0.0 --port=8080 --no-interaction
     ports:
       - "8080:8080"

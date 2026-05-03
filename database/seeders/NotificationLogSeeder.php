@@ -16,7 +16,7 @@ class NotificationLogSeeder extends Seeder
             NotificationLog::updateOrCreate(
                 [
                     'user_id' => $user->id,
-                    'channel' => 'in_app',
+                    'channel' => 'email',
                     'type' => 'welcome',
                 ],
                 [

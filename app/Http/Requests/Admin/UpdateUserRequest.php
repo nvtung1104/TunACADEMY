@@ -19,6 +19,7 @@ class UpdateUserRequest extends FormRequest
             'address'        => 'nullable|string|max:500',
             'parent_name'    => 'nullable|string|max:255',
             'parent_phone'   => 'nullable|string|max:20',
+            'parent_email'   => 'nullable|email|max:255',
             'parent_address' => 'nullable|string|max:500',
             'classroom_id'   => 'nullable|integer|exists:classrooms,id',
             'subject_ids'    => 'nullable|array',

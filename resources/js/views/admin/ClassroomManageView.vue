@@ -27,11 +27,18 @@
       <div v-if="classrooms.length === 0" class="col-span-full py-16 text-center text-gray-400">Chưa có lớp học nào</div>
       <div v-for="c in classrooms" :key="c.id" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
         <div class="flex items-start justify-between mb-3">
-          <div>
+          <div class="min-w-0 flex-1">
             <h3 class="font-semibold text-gray-900">{{ c.name }}</h3>
             <p class="text-xs text-gray-500 mt-0.5">{{ c.school_year?.name }} · Khối {{ c.grade?.level }}</p>
+            <p class="text-xs mt-1.5 flex items-center gap-1"
+              :class="c.homeroom_teacher ? 'text-indigo-600' : 'text-gray-300 italic'">
+              <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              {{ c.homeroom_teacher?.name ?? 'Chưa có GVCN' }}
+            </p>
           </div>
-          <span class="text-xs px-2 py-1 rounded-full" :class="c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+          <span class="text-xs px-2 py-1 rounded-full shrink-0 ml-2" :class="c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
             {{ c.status === 'active' ? 'Hoạt động' : 'Vô hiệu' }}
           </span>
         </div>
@@ -85,6 +92,13 @@
               <option v-for="sy in schoolYears" :key="sy.id" :value="sy.id">{{ sy.name }}</option>
             </select>
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Giáo viên chủ nhiệm</label>
+          <select v-model="form.homeroom_teacher_id" class="input">
+            <option :value="null">-- Chưa phân công --</option>
+            <option v-for="t in availableTeachers" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -186,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 
@@ -194,6 +208,7 @@ import AppModal from '@components/common/AppModal.vue'
 const classrooms    = ref([])
 const grades        = ref([])
 const schoolYears   = ref([])
+const teachers      = ref([])
 const loading       = ref(true)
 const filters       = reactive({ school_year_id: '', status: '' })
 
@@ -210,18 +225,25 @@ const modal     = ref(false)
 const editItem  = ref(null)
 const saving    = ref(false)
 const formError = ref('')
-const form      = reactive({ name: '', grade_id: '', school_year_id: '', max_students: 40, status: 'active' })
+const form      = reactive({ name: '', grade_id: '', school_year_id: '', homeroom_teacher_id: null, max_students: 40, status: 'active' })
 
 function openCreate() {
   editItem.value = null
-  Object.assign(form, { name: '', grade_id: '', school_year_id: '', max_students: 40, status: 'active' })
+  Object.assign(form, { name: '', grade_id: '', school_year_id: '', homeroom_teacher_id: null, max_students: 40, status: 'active' })
   formError.value = ''
   modal.value = true
 }
 
 function openEdit(c) {
   editItem.value = c
-  Object.assign(form, { name: c.name, grade_id: c.grade?.id ?? '', school_year_id: c.school_year?.id ?? '', max_students: c.max_students, status: c.status })
+  Object.assign(form, {
+    name: c.name,
+    grade_id: c.grade?.id ?? '',
+    school_year_id: c.school_year?.id ?? '',
+    homeroom_teacher_id: c.homeroom_teacher?.id ?? null,
+    max_students: c.max_students,
+    status: c.status,
+  })
   formError.value = ''
   modal.value = true
 }
@@ -254,6 +276,16 @@ const addingId          = ref(null)
 const removingId        = ref(null)
 
 const enrolledIds = computed(() => new Set(enrolledStudents.value.map(s => s.id)))
+
+// GV chưa chủ nhiệm lớp nào, hoặc đang chủ nhiệm đúng lớp đang sửa
+const availableTeachers = computed(() => {
+  const takenIds = new Set(
+    classrooms.value
+      .filter(c => c.homeroom_teacher && c.id !== editItem.value?.id)
+      .map(c => c.homeroom_teacher.id)
+  )
+  return teachers.value.filter(t => !takenIds.has(t.id))
+})
 
 async function openStudents(c) {
   selectedClass.value = c
@@ -312,9 +344,14 @@ async function removeStudent(studentId) {
 
 // ── Init ──────────────────────────────────────────────────
 onMounted(async () => {
-  const [g, sy] = await Promise.all([api.get('/admin/grades'), api.get('/admin/school-years')])
+  const [g, sy, t] = await Promise.all([
+    api.get('/admin/grades').catch(() => ({ data: { data: [] } })),
+    api.get('/admin/school-years').catch(() => ({ data: { data: [] } })),
+    api.get('/admin/users', { params: { role: 'teacher', per_page: 999 } }).catch(() => ({ data: { data: [] } })),
+  ])
   grades.value      = g.data.data  ?? []
   schoolYears.value = sy.data.data ?? []
+  teachers.value    = t.data.data?.data ?? t.data.data ?? []
   fetch()
 })
 </script>

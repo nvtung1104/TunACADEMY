@@ -18,7 +18,10 @@ class AssignmentController extends Controller
 
     public function store(StoreAssignmentRequest $request)
     {
-        $assignment = Assignment::create([...$request->validated(), 'teacher_id' => $request->user()->id]);
+        $data = $request->validated();
+        $data['teacher_id'] = $request->user()->id;
+        $data['status'] = ($data['visibility'] ?? 'private') === 'private' ? 'draft' : 'published';
+        $assignment = Assignment::create($data);
         return $this->success($assignment->load(['classroom', 'subject']), 'Tạo bài tập thành công', 201);
     }
 
@@ -31,7 +34,11 @@ class AssignmentController extends Controller
     public function update(StoreAssignmentRequest $request, Assignment $assignment)
     {
         $this->gate($request, $assignment);
-        $assignment->update($request->validated());
+        $data = $request->validated();
+        if (isset($data['visibility'])) {
+            $data['status'] = $data['visibility'] === 'private' ? 'draft' : 'published';
+        }
+        $assignment->update($data);
         return $this->success($assignment->fresh(), 'Cập nhật thành công');
     }
 

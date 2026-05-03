@@ -7,15 +7,15 @@ class StoreAssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'classroom_id' => 'required|exists:classrooms,id',
-            'subject_id'   => 'required|exists:subjects,id',
+            'classroom_id' => 'nullable|exists:classrooms,id',
+            'subject_id'   => 'nullable|exists:subjects,id',
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
-            'type'         => 'required|in:quiz,essay,fill_blank,matching,upload,listening,writing',
-            'deadline'     => 'required|date|after:now',
+            'type'         => 'nullable|in:quiz,essay,fill_blank,matching,upload,listening,writing',
+            'deadline'     => 'nullable|date|after:now',
             'max_score'    => 'sometimes|numeric|min:1|max:100',
             'allow_late'   => 'sometimes|boolean',
-            'status'       => 'sometimes|in:draft,published,closed',
+            'visibility'   => 'sometimes|in:public,private,class',
         ];
     }
 }

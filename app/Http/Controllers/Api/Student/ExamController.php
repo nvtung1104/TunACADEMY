@@ -69,16 +69,19 @@ class ExamController extends Controller
         $request->validate(['answers' => 'required|array']);
 
         $earnedPoints = 0; $totalPoints = 0; $totalCorrect = 0;
-        foreach ($request->answers as $questionId => $answer) {
+        foreach ($request->answers as $questionId => $studentAnswer) {
             $question = $exam->questions()->find($questionId);
             if (!$question) continue;
-            $isCorrect = trim((string)$answer) === trim((string)$question->correct_answer);
-            $pointsEarned = $isCorrect ? $question->points : 0;
+
+            $isCorrect   = $this->gradeAnswer($studentAnswer, $question->correct_answer, $question->type);
+            $pointsEarned = $isCorrect ? (float) $question->points : 0;
+            $stored       = is_array($studentAnswer) ? json_encode($studentAnswer, JSON_UNESCAPED_UNICODE) : (string) $studentAnswer;
+
             StudentAnswer::updateOrCreate(
                 ['attempt_id' => $attempt->id, 'question_id' => $question->id],
-                ['answer' => $answer, 'is_correct' => $isCorrect, 'points_earned' => $pointsEarned, 'answered_at' => now()]
+                ['answer' => $stored, 'is_correct' => $isCorrect, 'points_earned' => $pointsEarned, 'answered_at' => now()]
             );
-            $totalPoints += $question->points;
+            $totalPoints  += (float) $question->points;
             $earnedPoints += $pointsEarned;
             if ($isCorrect) $totalCorrect++;
         }
@@ -86,6 +89,27 @@ class ExamController extends Controller
         $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 10, 2) : 0;
         $attempt->update(['submitted_at' => now(), 'score' => $score, 'total_correct' => $totalCorrect, 'status' => 'graded']);
         return $this->success(['score' => $score, 'total_correct' => $totalCorrect], 'Nộp bài thành công');
+    }
+
+    private function gradeAnswer(mixed $student, mixed $correct, string $type): bool
+    {
+        // Teacher-graded types — always false (manual)
+        if (in_array($type, ['essay', 'speaking', 'writing', 'short_answer', 'reading', 'listening'])) return false;
+        if (is_null($correct) || $correct === []) return false;
+
+        // Normalise both sides to string arrays
+        $c = array_map('strval', is_array($correct) ? $correct : [$correct]);
+        $s = is_array($student)  ? array_map('strval', $student) : [strval($student)];
+
+        return match ($type) {
+            'multiple_select' => (function () use ($c, $s) { sort($c); sort($s); return $c === $s; })(),
+            'fill_blank'      => count($c) === count($s) && !array_filter(
+                                    array_map(fn($i, $ci) => mb_strtolower(trim($ci)) !== mb_strtolower(trim($s[$i] ?? '')),
+                                    array_keys($c), $c)),
+            'ordering'        => $c === $s,
+            'matching'        => json_encode($correct) === json_encode($student),
+            default           => trim($c[0] ?? '') === trim($s[0] ?? strval($student)),
+        };
     }
 
     public function result(Request $request, Exam $exam)

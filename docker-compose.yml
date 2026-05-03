@@ -15,6 +15,11 @@ services:
             DB_DATABASE: tunacademy
             DB_USERNAME: tunacademy
             DB_PASSWORD: tunacademy
+            REDIS_HOST: redis
+            REDIS_CLIENT: predis
+            SESSION_DRIVER: redis
+            CACHE_STORE: redis
+            QUEUE_CONNECTION: redis
         volumes:
             - .:/var/www/html
         networks:
@@ -120,6 +125,11 @@ services:
             DB_DATABASE: tunacademy
             DB_USERNAME: tunacademy
             DB_PASSWORD: tunacademy
+            REDIS_HOST: redis
+            REDIS_CLIENT: predis
+            SESSION_DRIVER: redis
+            CACHE_STORE: redis
+            QUEUE_CONNECTION: redis
         volumes:
             - .:/var/www/html
         command: php artisan reverb:start --host=0.0.0.0 --port=8080 --no-interaction

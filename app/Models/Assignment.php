@@ -12,6 +12,7 @@ class Assignment extends Model
     public function subject()     { return $this->belongsTo(Subject::class); }
     public function teacher()     { return $this->belongsTo(User::class, 'teacher_id'); }
     public function submissions() { return $this->hasMany(AssignmentSubmission::class); }
+    public function questions()   { return $this->hasMany(AssignmentQuestion::class)->orderBy('order_index'); }
     public function shares()      { return $this->morphMany(ContentShare::class, 'shareable'); }
     public function scopePublished($q) { return $q->where('status', 'published'); }
     public function isOverdue(): bool { return $this->deadline && now()->gt($this->deadline); }

@@ -11,7 +11,9 @@ class AssignmentController extends Controller
     {
         $classroomIds = $request->user()->classrooms()->pluck('classrooms.id');
         $assignments = Assignment::with(['subject', 'classroom'])
-            ->whereIn('classroom_id', $classroomIds)->published()
+            ->whereIn('classroom_id', $classroomIds)
+            ->published()
+            ->where('visibility', '!=', 'private')
             ->latest('deadline')->paginate(20);
         return $this->success($assignments);
     }
@@ -20,7 +22,7 @@ class AssignmentController extends Controller
     {
         $this->checkAccess($request, $assignment);
         $submission = $assignment->submissions()->where('student_id', $request->user()->id)->first();
-        return $this->success(['assignment' => $assignment->load('subject'), 'submission' => $submission]);
+        return $this->success(['assignment' => $assignment->load(['subject', 'questions']), 'submission' => $submission]);
     }
 
     public function submit(Request $request, Assignment $assignment)

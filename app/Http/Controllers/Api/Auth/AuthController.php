@@ -69,6 +69,7 @@ class AuthController extends Controller
             'qualification'  => 'sometimes|nullable|string|max:100',
             'parent_name'    => 'sometimes|nullable|string|max:255',
             'parent_phone'   => 'sometimes|nullable|string|max:20',
+            'parent_email'   => 'sometimes|nullable|email|max:255',
             'parent_address' => 'sometimes|nullable|string',
         ]);
         $request->user()->update($data);

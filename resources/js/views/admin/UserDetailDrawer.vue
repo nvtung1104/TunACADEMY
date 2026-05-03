@@ -93,7 +93,11 @@
                       <dt class="text-xs text-gray-400">Số điện thoại</dt>
                       <dd class="text-sm font-medium text-gray-800">{{ detail.user.parent_phone }}</dd>
                     </div>
-                    <div v-if="detail.user.parent_address">
+                    <div v-if="detail.user.parent_email">
+                      <dt class="text-xs text-gray-400">Gmail</dt>
+                      <dd class="text-sm font-medium text-gray-800">{{ detail.user.parent_email }}</dd>
+                    </div>
+                    <div v-if="detail.user.parent_address" class="col-span-2">
                       <dt class="text-xs text-gray-400">Địa chỉ</dt>
                       <dd class="text-sm font-medium text-gray-800">{{ detail.user.parent_address }}</dd>
                     </div>

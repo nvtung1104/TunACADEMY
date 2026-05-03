@@ -49,12 +49,14 @@
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Loại</th>
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Giáo viên</th>
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Lớp</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">Bắt đầu</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">Kết thúc</th>
             <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
             <th class="px-5 py-3 w-24"/>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          <tr v-if="!exams.length"><td colspan="6" class="py-12 text-center text-gray-400">Không có đề thi nào</td></tr>
+          <tr v-if="!exams.length"><td colspan="8" class="py-12 text-center text-gray-400">Không có đề thi nào</td></tr>
           <tr v-for="e in exams" :key="e.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-5 py-3">
               <div class="flex items-center gap-3">
@@ -63,7 +65,10 @@
                   {{ e.subject?.name?.[0] }}
                 </div>
                 <div>
-                  <p class="font-medium text-gray-800 line-clamp-1">{{ e.title }}</p>
+                  <button @click="$router.push(`/admin/exams/${e.id}`)"
+                    class="font-medium text-gray-800 hover:text-[#d63015] transition-colors text-left line-clamp-1">
+                    {{ e.title }}
+                  </button>
                   <p class="text-xs text-gray-400">{{ e.subject?.name }} · {{ e.duration_minutes }} phút</p>
                 </div>
               </div>
@@ -75,6 +80,22 @@
             </td>
             <td class="px-5 py-3 text-gray-600 hidden md:table-cell">{{ e.teacher?.name ?? '—' }}</td>
             <td class="px-5 py-3 text-gray-600 hidden lg:table-cell">{{ e.classroom?.name ?? '—' }}</td>
+            <td class="px-5 py-3 hidden xl:table-cell">
+              <template v-if="e.type === 'practice_exam'">
+                <span class="text-xs text-green-600 font-medium">Luôn mở</span>
+              </template>
+              <template v-else>
+                <span class="text-xs text-gray-700">{{ e.opened_at ? formatDateTime(e.opened_at) : '—' }}</span>
+              </template>
+            </td>
+            <td class="px-5 py-3 hidden xl:table-cell">
+              <template v-if="e.type === 'practice_exam'">
+                <span class="text-xs text-gray-300">—</span>
+              </template>
+              <template v-else>
+                <span class="text-xs text-gray-700">{{ e.closed_at ? formatDateTime(e.closed_at) : '—' }}</span>
+              </template>
+            </td>
             <td class="px-5 py-3">
               <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold" :class="statusClass(e.status)">
                 {{ statusLabel(e.status) }}
@@ -222,6 +243,7 @@ const subjects = ref([])
 let debounceTimer = null
 function debounceFetch() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => fetchData(), 400) }
 
+const formatDateTime = (iso) => iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '—'
 const typeLabel = (t) => ({ quiz_15: 'KT 15p', quiz_30: 'KT 30p', quiz_45: 'KT 45p', practice_exam: 'Ôn tập' }[t] ?? t ?? '—')
 const typeClass = (t) => ({ quiz_15: 'bg-amber-100 text-amber-700', quiz_30: 'bg-blue-100 text-blue-700', quiz_45: 'bg-purple-100 text-purple-700', practice_exam: 'bg-green-100 text-green-700' }[t] ?? 'bg-gray-100 text-gray-500')
 const statusLabel = (s) => ({ published: 'Đã xuất bản', draft: 'Bản nháp', closed: 'Đã đóng' }[s] ?? s)

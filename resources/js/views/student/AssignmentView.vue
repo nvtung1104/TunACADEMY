@@ -62,11 +62,14 @@
 
           <!-- Action -->
           <div class="shrink-0">
-            <button v-if="!a.submitted && !isOverdue(a.due_date)" @click="submitModal = true; selectedAssignment = a"
-              class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
-              Nộp bài
+            <button v-if="!a.submitted" @click="$router.push(`/student/assignments/${a.id}/do`)"
+              class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              :class="isOverdue(a.due_date)
+                ? 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'">
+              {{ isOverdue(a.due_date) ? 'Xem bài' : 'Làm bài' }}
             </button>
-            <span v-else-if="a.submitted" class="text-xs text-gray-400">
+            <span v-else class="text-xs text-gray-400">
               Nộp {{ formatDate(a.my_submission?.submitted_at) }}
             </span>
           </div>
@@ -74,37 +77,16 @@
       </div>
     </div>
 
-    <!-- Submit Modal -->
-    <AppModal v-model="submitModal" :title="`Nộp bài: ${selectedAssignment?.title ?? ''}`" size="md">
-      <div class="space-y-4">
-        <p class="text-sm text-gray-600">Nhập câu trả lời hoặc mô tả bài làm của bạn:</p>
-        <textarea v-model="submitContent" rows="5" placeholder="Nhập nội dung bài làm..."
-          class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
-        <div v-if="submitError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ submitError }}</div>
-      </div>
-      <template #footer>
-        <button @click="submitModal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
-        <button @click="submitAssignment" :disabled="submitting" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60 font-medium">
-          {{ submitting ? 'Đang nộp...' : 'Nộp bài' }}
-        </button>
-      </template>
-    </AppModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@api/axios'
-import AppModal from '@components/common/AppModal.vue'
 
 const assignments = ref([])
 const loading = ref(true)
 const activeTab = ref('all')
-const submitModal = ref(false)
-const selectedAssignment = ref(null)
-const submitContent = ref('')
-const submitting = ref(false)
-const submitError = ref('')
 
 const tabs = [
   { value: 'all', label: 'Tất cả' },
@@ -129,20 +111,6 @@ function dueColor(due, submitted) {
   if (submitted) return 'text-green-500'
   if (isOverdue(due)) return 'text-red-500'
   return 'text-amber-500'
-}
-
-async function submitAssignment() {
-  if (!selectedAssignment.value) return
-  submitting.value = true
-  submitError.value = ''
-  try {
-    await api.post(`/student/assignments/${selectedAssignment.value.id}/submit`, { content: submitContent.value })
-    submitModal.value = false
-    submitContent.value = ''
-    fetch()
-  } catch (e) {
-    submitError.value = e.response?.data?.message ?? 'Không thể nộp bài'
-  } finally { submitting.value = false }
 }
 
 async function fetch() {

@@ -71,6 +71,7 @@ class UserSeeder extends Seeder
                 'address'        => '23 Le Loi, Ha Noi',
                 'parent_name'    => 'Pham Van A',
                 'parent_phone'   => '0911111111',
+                'parent_email'   => 'phamvana.phuhuynh@gmail.com',
                 'parent_address' => '23 Le Loi, Ha Noi',
             ],
             [
@@ -82,6 +83,7 @@ class UserSeeder extends Seeder
                 'address'        => '56 Tran Hung Dao, Ha Noi',
                 'parent_name'    => 'Hoang Van B',
                 'parent_phone'   => '0911111112',
+                'parent_email'   => 'hoangvanb.phuhuynh@gmail.com',
                 'parent_address' => '56 Tran Hung Dao, Ha Noi',
             ],
             [
@@ -93,6 +95,7 @@ class UserSeeder extends Seeder
                 'address'        => '9 Kim Ma, Ha Noi',
                 'parent_name'    => 'Do Van C',
                 'parent_phone'   => '0911111113',
+                'parent_email'   => 'dovanc.phuhuynh@gmail.com',
                 'parent_address' => '9 Kim Ma, Ha Noi',
             ],
             [
@@ -104,6 +107,7 @@ class UserSeeder extends Seeder
                 'address'        => '34 Doi Can, Ha Noi',
                 'parent_name'    => 'Ngo Van D',
                 'parent_phone'   => '0911111114',
+                'parent_email'   => 'ngovand.phuhuynh@gmail.com',
                 'parent_address' => '34 Doi Can, Ha Noi',
             ],
         ];

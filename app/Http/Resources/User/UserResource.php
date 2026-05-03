@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'qualification'  => $this->qualification,
             'parent_name'    => $this->parent_name,
             'parent_phone'   => $this->parent_phone,
+            'parent_email'   => $this->parent_email,
             'parent_address' => $this->parent_address,
             'status'         => $this->status,
             'roles'          => $this->whenLoaded('roles', fn() => $this->roles->pluck('name')),

@@ -36,14 +36,15 @@
           <tr>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Đề thi</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Loại</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Thời gian mở</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Bắt đầu</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Kết thúc</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
             <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Thao tác</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           <tr v-if="exams.length === 0">
-            <td colspan="5" class="py-14 text-center text-gray-400">
+            <td colspan="6" class="py-14 text-center text-gray-400">
               <svg class="w-10 h-10 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
@@ -76,8 +77,15 @@
                 <span class="text-xs text-green-600 font-medium">Luôn mở</span>
               </template>
               <template v-else>
-                <p class="text-xs text-gray-600">{{ e.opened_at ? formatDate(e.opened_at) : '—' }}</p>
-                <p v-if="e.closed_at" class="text-xs text-gray-400">→ {{ formatDate(e.closed_at) }}</p>
+                <p class="text-xs text-gray-800 font-medium">{{ e.opened_at ? formatDate(e.opened_at) : '—' }}</p>
+              </template>
+            </td>
+            <td class="px-5 py-3 hidden lg:table-cell">
+              <template v-if="e.type === 'practice_exam'">
+                <span class="text-xs text-gray-300">—</span>
+              </template>
+              <template v-else>
+                <p class="text-xs text-gray-800 font-medium">{{ e.closed_at ? formatDate(e.closed_at) : '—' }}</p>
               </template>
             </td>
             <td class="px-5 py-3">
@@ -221,14 +229,62 @@
             <span class="text-sm text-gray-700">Cho phép thi lại</span>
           </label>
         </div>
+        <!-- Visibility -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Hiển thị</label>
-          <select v-model="form.visibility" class="input">
-            <option value="private">Riêng tư</option>
-            <option value="class">Cho lớp</option>
-            <option value="public">Công khai</option>
-          </select>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Gửi cho</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label v-for="opt in visibilityFormOptions" :key="opt.value"
+              class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors text-sm"
+              :class="form.visibility === opt.value ? 'border-[#d63015] bg-red-50 text-[#d63015] font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+              <input type="radio" :value="opt.value" v-model="form.visibility" class="sr-only" />
+              <span v-html="opt.icon" class="w-4 h-4 shrink-0"></span>
+              <div>
+                <p class="font-medium leading-tight">{{ opt.label }}</p>
+                <p class="text-[11px] text-gray-400 leading-tight mt-0.5">{{ opt.desc }}</p>
+              </div>
+            </label>
+          </div>
         </div>
+
+        <!-- Class picker — only when visibility = 'class' -->
+        <div v-if="form.visibility === 'class'" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Khối <span class="text-red-500">*</span></label>
+            <select v-model="form.grade_id" @change="form.classroom_id = ''" class="input">
+              <option value="">Chọn khối</option>
+              <option v-for="g in grades" :key="g.id" :value="g.id">Khối {{ g.level }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lớp nhận bài <span class="text-red-500">*</span></label>
+            <select v-model="form.classroom_id" class="input" :disabled="!form.grade_id">
+              <option value="">Chọn lớp</option>
+              <option v-for="c in filteredClassrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+        </div>
+        <!-- Câu hỏi từ ngân hàng (chỉ khi tạo mới) -->
+        <div v-if="!editItem">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">Câu hỏi từ ngân hàng</label>
+            <button type="button" @click="openPicker"
+              class="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 font-medium transition-colors">
+              + Chọn câu hỏi
+            </button>
+          </div>
+          <div v-if="pickedQuestions.length === 0" class="text-xs text-gray-400 bg-gray-50 rounded-xl p-3 text-center border border-dashed border-gray-200">
+            Chưa chọn câu hỏi nào từ ngân hàng
+          </div>
+          <ul v-else class="space-y-1.5 max-h-40 overflow-y-auto">
+            <li v-for="q in pickedQuestions" :key="q.id"
+              class="flex items-center justify-between gap-2 bg-indigo-50 rounded-lg px-3 py-2 text-xs border border-indigo-100">
+              <span class="truncate text-gray-700">{{ q.content }}</span>
+              <button type="button" @click="pickedQuestions = pickedQuestions.filter(x => x.id !== q.id)"
+                class="shrink-0 text-gray-400 hover:text-red-500 transition-colors">&times;</button>
+            </li>
+          </ul>
+        </div>
+
         <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
       </form>
       <template #footer>
@@ -307,16 +363,70 @@
         </tbody>
       </table>
     </AppModal>
+
+    <!-- Question Picker Modal -->
+    <Teleport to="body">
+      <div v-if="pickerModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="pickerModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-800">Chọn câu hỏi từ ngân hàng</h3>
+            <button @click="pickerModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+          </div>
+          <div class="px-6 py-3 border-b border-gray-100 flex gap-2">
+            <input v-model="pickerSearch" @input="debouncePicker" type="text" placeholder="Tìm câu hỏi..."
+              class="input flex-1 text-sm" />
+            <select v-model="pickerSubject" @change="fetchPicker" class="input text-sm w-36">
+              <option value="">Tất cả môn</option>
+              <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div class="flex-1 overflow-y-auto px-6 py-3">
+            <div v-if="pickerLoading" class="text-center py-8 text-gray-400 text-sm">Đang tải...</div>
+            <div v-else-if="pickerList.length === 0" class="text-center py-8 text-gray-400 text-sm">Không có câu hỏi</div>
+            <ul v-else class="space-y-2">
+              <li v-for="q in pickerList" :key="q.id"
+                class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                :class="pickerSelected.has(q.id) ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'"
+                @click="pickerSelected.has(q.id) ? pickerSelected.delete(q.id) : pickerSelected.add(q.id)">
+                <input type="checkbox" :checked="pickerSelected.has(q.id)" @click.stop
+                  @change="pickerSelected.has(q.id) ? pickerSelected.delete(q.id) : pickerSelected.add(q.id)"
+                  class="mt-0.5 text-indigo-600 rounded" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-800 line-clamp-2">{{ q.content }}</p>
+                  <div class="flex gap-2 mt-1">
+                    <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{{ typeLabel(q.type) }}</span>
+                    <span class="text-[11px] px-1.5 py-0.5 rounded font-medium" :class="diffClass(q.difficulty)">{{ diffLabel(q.difficulty) }}</span>
+                    <span v-if="q.subject" class="text-[11px] text-gray-400">{{ q.subject.name }}</span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-sm text-gray-500">Đã chọn: <strong>{{ pickerSelected.size }}</strong> câu</span>
+            <div class="flex gap-2">
+              <button @click="pickerModal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
+              <button @click="confirmPicker" :disabled="pickerSelected.size === 0"
+                class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                Thêm {{ pickerSelected.size > 0 ? pickerSelected.size + ' câu' : '' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 
 const exams = ref([])
 const classrooms = ref([])
+const allClassrooms = ref([])
 const subjects = ref([])
 const loading = ref(true)
 const modal = ref(false)
@@ -332,10 +442,38 @@ const formError = ref('')
 const shareError = ref('')
 const filters = reactive({ type: '', status: '' })
 const form = reactive({
-  type: 'quiz_15', title: '', description: '', classroom_id: '', subject_id: '',
+  type: 'quiz_15', title: '', description: '', classroom_id: '', grade_id: '', subject_id: '',
   duration_minutes: 15, opened_at: '', closed_at: '', visibility: 'private',
   shuffle_questions: false, shuffle_options: false,
   proctoring_enabled: false, allow_retake: false,
+})
+
+const pickedQuestions = ref([])
+const pickerModal = ref(false)
+const pickerList = ref([])
+const pickerLoading = ref(false)
+const pickerSelected = ref(new Set())
+const pickerSearch = ref('')
+const pickerSubject = ref('')
+let pickerDebounce = null
+
+const grades = computed(() => {
+  const map = new Map()
+  allClassrooms.value.forEach(c => { if (c.grade && !map.has(c.grade.id)) map.set(c.grade.id, c.grade) })
+  return [...map.values()].sort((a, b) => a.level - b.level)
+})
+const filteredClassrooms = computed(() =>
+  form.grade_id ? allClassrooms.value.filter(c => c.grade_id === form.grade_id) : []
+)
+
+const visibilityFormOptions = [
+  { value: 'private', label: 'Riêng tư',    desc: 'Chỉ bạn xem được',         icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>' },
+  { value: 'class',   label: 'Gửi cho lớp', desc: 'Học sinh lớp được chọn',   icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' },
+  { value: 'public',  label: 'Công khai',   desc: 'Tất cả học sinh đều thấy', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
+]
+
+watch(() => form.visibility, (v) => {
+  if (v !== 'class') { form.classroom_id = ''; form.grade_id = '' }
 })
 const shareForm = reactive({ visibility: 'class', classroom_id: '', student_codes: '' })
 
@@ -366,15 +504,18 @@ function openCreate() {
     duration_minutes: 15, opened_at: '', closed_at: '', visibility: 'private',
     shuffle_questions: false, shuffle_options: false, proctoring_enabled: false, allow_retake: false,
   })
+  pickedQuestions.value = []
   formError.value = ''
   modal.value = true
 }
 
 function openEdit(e) {
   editItem.value = e
+  const existingClass = allClassrooms.value.find(c => c.id === e.classroom?.id)
   Object.assign(form, {
     type: e.type ?? 'quiz_45', title: e.title, description: e.description ?? '',
-    classroom_id: e.classroom?.id ?? '', subject_id: e.subject?.id ?? '',
+    classroom_id: e.classroom?.id ?? '', grade_id: existingClass?.grade_id ?? '',
+    subject_id: e.subject?.id ?? '',
     duration_minutes: e.duration_minutes, visibility: e.visibility ?? 'private',
     opened_at: e.opened_at ? e.opened_at.slice(0, 16) : '',
     closed_at: e.closed_at ? e.closed_at.slice(0, 16) : '',
@@ -409,8 +550,17 @@ async function save() {
     if (!payload.opened_at) delete payload.opened_at
     if (!payload.closed_at) delete payload.closed_at
     if (!payload.classroom_id) delete payload.classroom_id
-    if (editItem.value) await api.put(`/teacher/exams/${editItem.value.id}`, payload)
-    else await api.post('/teacher/exams', payload)
+    if (editItem.value) {
+      await api.put(`/teacher/exams/${editItem.value.id}`, payload)
+    } else {
+      const { data } = await api.post('/teacher/exams', payload)
+      const examId = data.data?.id
+      if (examId && pickedQuestions.value.length > 0) {
+        await api.post(`/teacher/exams/${examId}/import-questions`, {
+          question_ids: pickedQuestions.value.map(q => q.id),
+        }).catch(() => {})
+      }
+    }
     modal.value = false; fetch()
   } catch (e) { formError.value = e.response?.data?.message ?? 'Có lỗi xảy ra' }
   finally { saving.value = false }
@@ -439,6 +589,36 @@ async function deleteExam(e) {
   catch (err) { alert(err.response?.data?.message ?? 'Không thể xóa') }
 }
 
+function debouncePicker() {
+  clearTimeout(pickerDebounce)
+  pickerDebounce = setTimeout(fetchPicker, 350)
+}
+async function fetchPicker() {
+  pickerLoading.value = true
+  try {
+    const { data } = await api.get('/teacher/question-bank', {
+      params: { search: pickerSearch.value || undefined, subject_id: pickerSubject.value || undefined },
+    })
+    pickerList.value = data.data?.data ?? data.data ?? []
+  } finally { pickerLoading.value = false }
+}
+function openPicker() {
+  pickerSelected.value = new Set(pickedQuestions.value.map(q => q.id))
+  pickerSearch.value = ''
+  pickerSubject.value = ''
+  fetchPicker()
+  pickerModal.value = true
+}
+function confirmPicker() {
+  const selectedIds = [...pickerSelected.value]
+  const existing = pickerList.value.filter(q => selectedIds.includes(q.id))
+  const alreadyIds = new Set(pickedQuestions.value.map(q => q.id))
+  existing.forEach(q => { if (!alreadyIds.has(q.id)) pickedQuestions.value.push(q) })
+  pickerModal.value = false
+}
+function diffLabel(d) { return { easy: 'Dễ', medium: 'TB', hard: 'Khó' }[d] ?? d }
+function diffClass(d) { return { easy: 'bg-green-100 text-green-700', medium: 'bg-yellow-100 text-yellow-700', hard: 'bg-red-100 text-red-700' }[d] ?? 'bg-gray-100 text-gray-500' }
+
 function typeLabel(t) {
   return { quiz_15: 'KT 15p', quiz_30: 'KT 30p', quiz_45: 'KT 45p', practice_exam: 'Ôn tập' }[t] ?? t
 }
@@ -456,11 +636,13 @@ function statusClass(s) { return { draft: 'bg-amber-100 text-amber-700', publish
 function formatDate(iso) { return iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '' }
 
 onMounted(async () => {
-  const [cr, sr] = await Promise.all([
-    api.get('/teacher/classrooms'),
-    api.get('/admin/subjects', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
+  const [cr, allCr, sr] = await Promise.all([
+    api.get('/teacher/classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/teacher/all-classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/public/subjects').catch(() => ({ data: { data: [] } })),
   ])
   classrooms.value = cr.data.data?.data ?? cr.data.data ?? []
+  allClassrooms.value = allCr.data.data ?? []
   subjects.value = sr.data.data ?? []
   fetch()
 })

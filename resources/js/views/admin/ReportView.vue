@@ -89,7 +89,10 @@ async function exportData(type) {
 function formatDate(d) { return d ? new Date(d).toLocaleString('vi-VN') : '' }
 
 onMounted(async () => {
-  const [ov, ex] = await Promise.all([api.get('/admin/reports/overview'), api.get('/admin/reports/exams')])
+  const [ov, ex] = await Promise.all([
+    api.get('/admin/reports/overview').catch(() => ({ data: { data: {} } })),
+    api.get('/admin/reports/exams').catch(() => ({ data: { data: [] } })),
+  ])
   overview.value = ov.data.data ?? {}
   attempts.value = ex.data.data?.data ?? []
 })

@@ -92,14 +92,43 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả / Đề bài</label>
           <textarea v-model="form.description" class="input resize-none" rows="3" placeholder="Nội dung bài tập, hướng dẫn..."></textarea>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+
+        <!-- Visibility -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Gửi cho</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label v-for="opt in visibilityFormOptions" :key="opt.value"
+              class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors text-sm"
+              :class="form.visibility === opt.value ? 'border-[#d63015] bg-red-50 text-[#d63015] font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+              <input type="radio" :value="opt.value" v-model="form.visibility" class="sr-only" />
+              <span v-html="opt.icon" class="w-4 h-4 shrink-0"></span>
+              <div>
+                <p class="font-medium leading-tight">{{ opt.label }}</p>
+                <p class="text-[11px] text-gray-400 leading-tight mt-0.5">{{ opt.desc }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Class picker — only when visibility = 'class' -->
+        <div v-if="form.visibility === 'class'" class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Lớp học</label>
-            <select v-model="form.classroom_id" class="input">
-              <option value="">Chọn lớp</option>
-              <option v-for="c in classrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Khối <span class="text-red-500">*</span></label>
+            <select v-model="form.grade_id" @change="form.classroom_id = ''" class="input">
+              <option value="">Chọn khối</option>
+              <option v-for="g in grades" :key="g.id" :value="g.id">Khối {{ g.level }}</option>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lớp nhận bài <span class="text-red-500">*</span></label>
+            <select v-model="form.classroom_id" class="input" :disabled="!form.grade_id">
+              <option value="">Chọn lớp</option>
+              <option v-for="c in filteredClassrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Môn học</label>
             <select v-model="form.subject_id" class="input">
@@ -107,27 +136,78 @@
               <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Hạn nộp</label>
             <input v-model="form.due_date" type="datetime-local" class="input" />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Hiển thị</label>
-            <select v-model="form.visibility" class="input">
-              <option value="private">Riêng tư</option>
-              <option value="class">Cho lớp</option>
-              <option value="public">Công khai</option>
-            </select>
+        </div>
+
+        <!-- Câu hỏi từ ngân hàng -->
+        <div v-if="!editItem">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">Câu hỏi từ ngân hàng</label>
+            <button type="button" @click="openPicker" class="text-xs text-[#d63015] font-medium hover:underline">+ Chọn câu hỏi</button>
+          </div>
+          <div v-if="pickedQuestions.length === 0" class="text-xs text-gray-400 bg-gray-50 rounded-xl px-4 py-3">
+            Chưa chọn câu hỏi nào. Nhấn "Chọn câu hỏi" để thêm từ ngân hàng.
+          </div>
+          <div v-else class="space-y-1.5">
+            <div v-for="(q, i) in pickedQuestions" :key="q.id"
+              class="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100">
+              <span class="text-xs text-gray-400 shrink-0">{{ i + 1 }}.</span>
+              <div class="flex-1 min-w-0 text-xs text-gray-700 line-clamp-1" v-html="q.content"></div>
+              <button type="button" @click="pickedQuestions.splice(i, 1)"
+                class="shrink-0 p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
           </div>
         </div>
+
         <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
       </form>
       <template #footer>
         <button @click="modal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
         <button @click="save" :disabled="saving" class="px-4 py-2 rounded-xl bg-[#d63015] text-white text-sm hover:bg-[#c02a10] disabled:opacity-60 font-medium">
           {{ saving ? 'Đang lưu...' : 'Lưu' }}
+        </button>
+      </template>
+    </AppModal>
+
+    <!-- Question Picker Modal -->
+    <AppModal v-model="pickerModal" title="Chọn câu hỏi từ ngân hàng" size="lg">
+      <div class="space-y-3">
+        <div class="flex gap-2">
+          <input v-model="pickerSearch" @input="debouncePicker" type="text" placeholder="Tìm câu hỏi..."
+            class="input flex-1" />
+          <select v-model="pickerSubject" @change="fetchPicker" class="input w-36">
+            <option value="">Tất cả môn</option>
+            <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <div v-if="pickerLoading" class="py-8 text-center text-gray-400 text-sm">Đang tải...</div>
+        <div v-else-if="pickerList.length === 0" class="py-8 text-center text-gray-400 text-sm">Không tìm thấy câu hỏi nào</div>
+        <div v-else class="space-y-1.5 max-h-80 overflow-y-auto">
+          <label v-for="q in pickerList" :key="q.id"
+            class="flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors"
+            :class="pickerSelected.includes(q.id) ? 'border-[#d63015] bg-red-50' : 'border-gray-100 hover:bg-gray-50'">
+            <input type="checkbox" :value="q.id" v-model="pickerSelected" class="mt-0.5 text-[#d63015] rounded shrink-0" />
+            <div class="min-w-0 flex-1">
+              <div class="text-sm text-gray-800 line-clamp-2" v-html="q.content"></div>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">{{ typeLabel(q.type) }}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-md" :class="diffClass(q.difficulty)">{{ diffLabel(q.difficulty) }}</span>
+                <span v-if="q.subject" class="text-[10px] text-gray-400">{{ q.subject.name }}</span>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <template #footer>
+        <span class="text-sm text-gray-500 mr-auto">{{ pickerSelected.length }} đã chọn</span>
+        <button @click="pickerModal = false" class="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50">Hủy</button>
+        <button @click="confirmPicker" class="px-4 py-2 rounded-xl bg-[#d63015] text-white text-sm hover:bg-[#c02a10] font-medium">
+          Thêm {{ pickerSelected.length }} câu
         </button>
       </template>
     </AppModal>
@@ -202,12 +282,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 
 const assignments = ref([])
 const classrooms = ref([])
+const allClassrooms = ref([])
 const subjects = ref([])
 const submissions = ref([])
 const loading = ref(true)
@@ -222,7 +303,70 @@ const sharing = ref(false)
 const formError = ref('')
 const shareError = ref('')
 const filters = reactive({ classroom_id: '', status: '' })
-const form = reactive({ title: '', description: '', classroom_id: '', subject_id: '', due_date: '', visibility: 'private' })
+const form = reactive({ title: '', description: '', classroom_id: '', grade_id: '', subject_id: '', due_date: '', visibility: 'private' })
+
+// Question picker
+const pickedQuestions = ref([])
+const pickerModal = ref(false)
+const pickerList = ref([])
+const pickerLoading = ref(false)
+const pickerSelected = ref([])
+const pickerSearch = ref('')
+const pickerSubject = ref('')
+
+let pickerDebounce = null
+function debouncePicker() {
+  clearTimeout(pickerDebounce)
+  pickerDebounce = setTimeout(() => fetchPicker(), 400)
+}
+
+async function fetchPicker() {
+  pickerLoading.value = true
+  try {
+    const { data } = await api.get('/teacher/question-bank', {
+      params: { search: pickerSearch.value, subject_id: pickerSubject.value, per_page: 50 }
+    })
+    pickerList.value = data.data?.data ?? data.data ?? []
+  } finally { pickerLoading.value = false }
+}
+
+function openPicker() {
+  pickerSelected.value = pickedQuestions.value.map(q => q.id)
+  pickerSearch.value = ''
+  pickerSubject.value = ''
+  pickerModal.value = true
+  fetchPicker()
+}
+
+function confirmPicker() {
+  const selectedIds = pickerSelected.value
+  const existingIds = pickedQuestions.value.map(q => q.id)
+  const toAdd = pickerList.value.filter(q => selectedIds.includes(q.id) && !existingIds.includes(q.id))
+  pickedQuestions.value = [
+    ...pickedQuestions.value.filter(q => selectedIds.includes(q.id)),
+    ...toAdd,
+  ]
+  pickerModal.value = false
+}
+
+function typeLabel(t) {
+  return { multiple_choice: 'Chọn 1', multiple_select: 'Chọn nhiều', true_false: 'Đúng/Sai',
+    fill_blank: 'Điền trống', short_answer: 'Ngắn', essay: 'Tự luận', calculation: 'Tính toán',
+    ordering: 'Sắp xếp', matching: 'Nối cặp', drag_drop: 'Kéo thả',
+    reading: 'Đọc hiểu', listening: 'Nghe', speaking: 'Nói', writing: 'Viết' }[t] ?? t
+}
+function diffLabel(d) { return { easy: 'Dễ', medium: 'TB', hard: 'Khó' }[d] ?? d }
+function diffClass(d) { return { easy: 'bg-green-100 text-green-700', medium: 'bg-amber-100 text-amber-700', hard: 'bg-red-100 text-red-700' }[d] ?? '' }
+
+const grades = computed(() => {
+  const map = new Map()
+  allClassrooms.value.forEach(c => { if (c.grade && !map.has(c.grade.id)) map.set(c.grade.id, c.grade) })
+  return [...map.values()].sort((a, b) => a.level - b.level)
+})
+
+const filteredClassrooms = computed(() =>
+  form.grade_id ? allClassrooms.value.filter(c => c.grade_id === form.grade_id) : []
+)
 const shareForm = reactive({ visibility: 'class', classroom_id: '', student_codes: '' })
 
 const visibilityOptions = [
@@ -231,6 +375,16 @@ const visibilityOptions = [
   { value: 'public',   label: 'Công khai',     desc: 'Tất cả học sinh đều có thể tìm thấy' },
   { value: 'selected', label: 'Chọn học sinh', desc: 'Chia sẻ cho từng học sinh theo mã' },
 ]
+
+const visibilityFormOptions = [
+  { value: 'private', label: 'Riêng tư',    desc: 'Chỉ bạn xem được',           icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>' },
+  { value: 'class',   label: 'Gửi cho lớp', desc: 'Học sinh lớp được chọn',     icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' },
+  { value: 'public',  label: 'Công khai',   desc: 'Tất cả học sinh đều thấy',   icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
+]
+
+watch(() => form.visibility, (v) => {
+  if (v !== 'class') { form.classroom_id = ''; form.grade_id = '' }
+})
 
 async function fetch() {
   loading.value = true
@@ -243,13 +397,23 @@ async function fetch() {
 function openCreate() {
   editItem.value = null
   Object.assign(form, { title: '', description: '', classroom_id: '', subject_id: '', due_date: '', visibility: 'private' })
+  pickedQuestions.value = []
   formError.value = ''
   modal.value = true
 }
 
 function openEdit(a) {
   editItem.value = a
-  Object.assign(form, { title: a.title, description: a.description ?? '', classroom_id: a.classroom?.id ?? '', subject_id: a.subject?.id ?? '', due_date: a.due_date ? a.due_date.slice(0, 16) : '', visibility: a.visibility ?? 'private' })
+  const existingClass = allClassrooms.value.find(c => c.id === a.classroom?.id)
+  Object.assign(form, {
+    title: a.title,
+    description: a.description ?? '',
+    classroom_id: a.classroom?.id ?? '',
+    grade_id: existingClass?.grade_id ?? '',
+    subject_id: a.subject?.id ?? '',
+    due_date: a.due_date ? a.due_date.slice(0, 16) : '',
+    visibility: a.visibility ?? 'private',
+  })
   formError.value = ''
   modal.value = true
 }
@@ -278,8 +442,17 @@ async function save() {
     if (!payload.due_date) delete payload.due_date
     if (!payload.subject_id) delete payload.subject_id
     if (!payload.classroom_id) delete payload.classroom_id
-    if (editItem.value) await api.put(`/teacher/assignments/${editItem.value.id}`, payload)
-    else await api.post('/teacher/assignments', payload)
+    if (editItem.value) {
+      await api.put(`/teacher/assignments/${editItem.value.id}`, payload)
+    } else {
+      const { data } = await api.post('/teacher/assignments', payload)
+      const assignmentId = data.data?.id
+      if (assignmentId && pickedQuestions.value.length > 0) {
+        await api.post(`/teacher/assignments/${assignmentId}/import-questions`, {
+          question_ids: pickedQuestions.value.map(q => q.id),
+        }).catch(() => {})
+      }
+    }
     modal.value = false; fetch()
   } catch (e) { formError.value = e.response?.data?.message ?? 'Có lỗi xảy ra' }
   finally { saving.value = false }
@@ -327,11 +500,13 @@ function dueBadgeLabel(due) {
 }
 
 onMounted(async () => {
-  const [cr, sr] = await Promise.all([
-    api.get('/teacher/classrooms'),
-    api.get('/admin/subjects', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
+  const [cr, allCr, sr] = await Promise.all([
+    api.get('/teacher/classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/teacher/all-classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/public/subjects').catch(() => ({ data: { data: [] } })),
   ])
   classrooms.value = cr.data.data?.data ?? cr.data.data ?? []
+  allClassrooms.value = allCr.data.data ?? []
   subjects.value = sr.data.data ?? []
   fetch()
 })

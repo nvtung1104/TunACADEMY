@@ -12,6 +12,7 @@ storage/logs/*
 bootstrap/cache/*
 public/build
 public/hot
+public/storage
 *.log
 docker-compose*.yml
 Dockerfile

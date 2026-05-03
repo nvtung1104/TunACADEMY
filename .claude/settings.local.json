@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "PowerShell($nginxExe = \"C:\\\\laragon\\\\bin\\\\nginx\\\\nginx-1.27.3\\\\nginx.exe\"; $nginxConf = \"C:\\\\laragon\\\\bin\\\\nginx\\\\nginx-1.27.3\\\\conf\\\\nginx.conf\"; & $nginxExe -c $nginxConf -t 2>&1)",
+      "Bash(Select-String -Pattern \"PUSHER|BROADCAST|REVERB|WEBSOCKET|VITE_\")"
     ]
   }
 }

@@ -40,9 +40,13 @@ Route::prefix('public')->group(function () {
     Route::get('/lessons', [PublicController::class, 'lessons']);
     Route::get('/lessons/{lesson}', [PublicController::class, 'lesson']);
     Route::get('/exams', [PublicController::class, 'exams']);
-    Route::get('/exams/{exam}', [PublicController::class, 'exam']);
+    Route::get('/exams/{id}', [PublicController::class, 'exam']);
+    Route::get('/exams/{id}/take', [PublicController::class, 'examTake']);
+    Route::post('/exams/{id}/submit', [PublicController::class, 'examSubmit']);
     Route::get('/assignments', [PublicController::class, 'assignments']);
-    Route::get('/assignments/{assignment}', [PublicController::class, 'assignment']);
+    Route::get('/assignments/{id}', [PublicController::class, 'assignment']);
+    Route::get('/assignments/{id}/take', [PublicController::class, 'assignmentTake']);
+    Route::post('/assignments/{id}/submit', [PublicController::class, 'assignmentSubmit']);
     Route::get('/classrooms', [PublicController::class, 'classrooms']);
 });
 
@@ -92,10 +96,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Live / WebRTC (teachers + students)
     Route::prefix('live')->group(function () {
-        Route::get('/ice-servers', [WebRTCController::class, 'iceServers']);
+        Route::get('/ice-servers',                  [WebRTCController::class, 'iceServers']);
+        Route::get('/rooms/{session}/info',            [WebRTCController::class, 'sessionInfo']);
+        Route::get('/rooms/{session}/signals',         [WebRTCController::class, 'pollSignals']);
+        Route::get('/rooms/{session}/messages',        [WebRTCController::class, 'getMessages']);
+        Route::post('/rooms/{session}/message',        [WebRTCController::class, 'sendMessage']);
         Route::post('/signal', [WebRTCController::class, 'signal']);
-        Route::post('/rooms/{room}/join', [WebRTCController::class, 'joinRoom']);
-        Route::post('/rooms/{room}/leave', [WebRTCController::class, 'leaveRoom']);
+        Route::post('/rooms/{session}/join', [WebRTCController::class, 'joinRoom']);
+        Route::post('/rooms/{session}/leave', [WebRTCController::class, 'leaveRoom']);
     });
 
     // ─── Admin ───────────────────────────────────────────────────────────────
@@ -126,16 +134,32 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/lessons/{lesson}',                              [AdminContentController::class, 'deleteLesson']);
             Route::post('/lessons/{lesson}/materials',                      [AdminContentController::class, 'uploadMaterial']);
             Route::delete('/lessons/{lesson}/materials/{material}',         [AdminContentController::class, 'deleteMaterial']);
-            Route::get('/exams',                         [AdminContentController::class, 'exams']);
-            Route::post('/exams',                        [AdminContentController::class, 'storeExam']);
-            Route::put('/exams/{exam}',                  [AdminContentController::class, 'updateExam']);
-            Route::delete('/exams/{exam}',               [AdminContentController::class, 'deleteExam']);
-            Route::get('/assignments',                   [AdminContentController::class, 'assignments']);
-            Route::post('/assignments',                  [AdminContentController::class, 'storeAssignment']);
-            Route::put('/assignments/{assignment}',      [AdminContentController::class, 'updateAssignment']);
-            Route::delete('/assignments/{assignment}',   [AdminContentController::class, 'deleteAssignment']);
-            Route::get('/live-sessions',                 [AdminContentController::class, 'liveSessions']);
-            Route::delete('/live-sessions/{liveSession}',[AdminContentController::class, 'deleteLiveSession']);
+            Route::get('/exams',                                    [AdminContentController::class, 'exams']);
+            Route::post('/exams',                               [AdminContentController::class, 'storeExam']);
+            Route::get('/exams/{exam}',                         [AdminContentController::class, 'examDetail']);
+            Route::put('/exams/{exam}',                         [AdminContentController::class, 'updateExam']);
+            Route::delete('/exams/{exam}',                      [AdminContentController::class, 'deleteExam']);
+            Route::get('/exams/{exam}/attempts',                [AdminContentController::class, 'examAttempts']);
+            Route::post('/media/audio',                          [AdminContentController::class, 'uploadAudio']);
+            Route::get('/exams/{exam}/questions',               [AdminContentController::class, 'examQuestions']);
+            Route::post('/exams/{exam}/questions',              [AdminContentController::class, 'storeExamQuestion']);
+            Route::put('/exams/{exam}/questions/{question}',    [AdminContentController::class, 'updateExamQuestion']);
+            Route::delete('/exams/{exam}/questions/{question}', [AdminContentController::class, 'deleteExamQuestion']);
+            Route::get('/assignments',                          [AdminContentController::class, 'assignments']);
+            Route::post('/assignments',                         [AdminContentController::class, 'storeAssignment']);
+            Route::get('/assignments/{assignment}',             [AdminContentController::class, 'assignmentDetail']);
+            Route::put('/assignments/{assignment}',             [AdminContentController::class, 'updateAssignment']);
+            Route::delete('/assignments/{assignment}',          [AdminContentController::class, 'deleteAssignment']);
+            Route::get('/assignments/{assignment}/submissions',             [AdminContentController::class, 'assignmentSubmissions']);
+            Route::get('/assignments/{assignment}/questions',               [AdminContentController::class, 'assignmentQuestions']);
+            Route::post('/assignments/{assignment}/questions',              [AdminContentController::class, 'storeAssignmentQuestion']);
+            Route::put('/assignments/{assignment}/questions/{question}',    [AdminContentController::class, 'updateAssignmentQuestion']);
+            Route::delete('/assignments/{assignment}/questions/{question}', [AdminContentController::class, 'deleteAssignmentQuestion']);
+            Route::get('/live-sessions',                        [AdminContentController::class, 'liveSessions']);
+            Route::post('/live-sessions',                       [AdminContentController::class, 'storeLiveSession']);
+            Route::get('/live-sessions/coverage',               [AdminContentController::class, 'checkLiveSessionCoverage']);
+            Route::post('/live-sessions/create-for-all',        [AdminContentController::class, 'createLiveSessionsForAll']);
+            Route::delete('/live-sessions/{liveSession}',       [AdminContentController::class, 'deleteLiveSession']);
         });
 
         Route::prefix('reports')->group(function () {
@@ -151,6 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:teacher')->prefix('teacher')->as('teacher.')->group(function () {
 
         Route::apiResource('classrooms', TeacherClassroomController::class);
+        Route::get('all-classrooms', [TeacherClassroomController::class, 'allClassrooms']);
         Route::get('my-subjects', [TeacherSubjectController::class, 'mySubjects']);
         Route::post('classrooms/{classroom}/students', [TeacherClassroomController::class, 'addStudent']);
         Route::delete('classrooms/{classroom}/students/{student}', [TeacherClassroomController::class, 'removeStudent']);
@@ -182,6 +207,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('question-bank', QuestionBankController::class);
         Route::get('question-bank-public', [QuestionBankController::class, 'publicBank']);
 
+        Route::post('assignments/{assignment}/import-questions', [QuestionBankController::class, 'importToAssignment']);
         Route::apiResource('assignments', TeacherAssignmentController::class);
         Route::post('assignments/{assignment}/share', [TeacherAssignmentController::class, 'share']);
         Route::post('assignments/{assignment}/thumbnail', [TeacherAssignmentController::class, 'uploadThumbnail']);

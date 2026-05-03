@@ -131,13 +131,8 @@ function formatDate(iso) {
   return iso ? new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : ''
 }
 
-async function takeExam(e) {
-  try {
-    await api.post(`/student/exams/${e.id}/start`)
-    router.push(`/student/exams/${e.id}/result`)
-  } catch (err) {
-    alert(err.response?.data?.message ?? 'Không thể bắt đầu bài thi')
-  }
+function takeExam(e) {
+  router.push(`/student/exams/${e.id}/take`)
 }
 
 onMounted(async () => {
