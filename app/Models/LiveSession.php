@@ -19,7 +19,7 @@ class LiveSession extends Model
     public function subject()      { return $this->belongsTo(Subject::class); }
     public function teacher()      { return $this->belongsTo(User::class, 'teacher_id'); }
     public function lesson()       { return $this->belongsTo(Lesson::class); }
-    public function participants() { return $this->hasMany(LiveParticipant::class); }
+    public function participants() { return $this->hasMany(LiveParticipant::class, 'session_id'); }
     public function attendances()  { return $this->hasMany(LiveAttendance::class); }
     public function breakoutRooms(){ return $this->hasMany(BreakoutRoom::class); }
     public function chats()        { return $this->hasMany(LiveChat::class, 'session_id'); }

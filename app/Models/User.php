@@ -27,9 +27,8 @@ class User extends Authenticatable
         'qualification',
         'parent_name',
         'parent_phone',
+        'parent_email',
         'parent_address',
-        'zalo_user_id',
-        'zalo_notification_enabled',
         'status',
         'must_change_password',
         'last_login_at',
@@ -42,7 +41,6 @@ class User extends Authenticatable
 
     protected $casts = [
         'date_of_birth' => 'date',
-        'zalo_notification_enabled' => 'boolean',
         'must_change_password' => 'boolean',
         'last_login_at' => 'datetime',
         'password' => 'hashed',

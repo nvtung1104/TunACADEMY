@@ -11,7 +11,9 @@ class AssignmentController extends Controller
     {
         $classroomIds = $request->user()->classrooms()->pluck('classrooms.id');
         $assignments = Assignment::with(['subject', 'classroom'])
-            ->whereIn('classroom_id', $classroomIds)->published()
+            ->whereIn('classroom_id', $classroomIds)
+            ->published()
+            ->where('visibility', '!=', 'private')
             ->latest('deadline')->paginate(20);
         return $this->success($assignments);
     }

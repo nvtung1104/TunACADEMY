@@ -19,9 +19,8 @@ return new class extends Migration {
             $table->string('qualification', 100)->nullable();  // GV: Cử nhân/Thạc sĩ
             $table->string('parent_name')->nullable();          // HS: tên phụ huynh
             $table->string('parent_phone', 20)->nullable();     // HS: SĐT phụ huynh
+            $table->string('parent_email')->nullable();          // HS: Gmail phụ huynh nhận thông báo
             $table->text('parent_address')->nullable();
-            $table->string('zalo_user_id', 50)->nullable();    // Zalo OA
-            $table->boolean('zalo_notification_enabled')->default(true);
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->boolean('must_change_password')->default(true);
             $table->timestamp('last_login_at')->nullable();

@@ -142,9 +142,11 @@
 
       <!-- Content -->
       <main class="flex-1 overflow-y-auto p-5">
-        <Transition name="fade" mode="out-in">
-          <RouterView :key="route.path" />
-        </Transition>
+        <RouterView v-slot="{ Component }">
+          <Transition name="fade">
+            <component :is="Component" :key="route.path" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>
@@ -180,6 +182,7 @@ const icons = {
   userCircle: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
   bookmark: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`,
   database: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3zm0 0v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7m-16 5v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5"/></svg>`,
+  plus: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>`,
 }
 
 const adminNav = [
@@ -204,6 +207,7 @@ const teacherNav = [
   { path: '/teacher/live', label: 'Phòng trực tuyến', icon: icons.video },
   { path: '/teacher/grades', label: 'Điểm số', icon: icons.star },
   { path: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: icons.database },
+  { path: '/teacher/question-bank/create', label: 'Thêm câu hỏi', icon: icons.plus },
 ]
 
 const studentNav = [
@@ -246,7 +250,8 @@ const pageMeta = {
   '/teacher/assignments':{ title: 'Bài tập',             subtitle: 'Giao và chấm bài tập' },
   '/teacher/live':          { title: 'Phòng trực tuyến',    subtitle: 'Mở phòng học cho lớp của bạn' },
   '/teacher/grades':        { title: 'Điểm số',             subtitle: 'Kết quả học tập' },
-  '/teacher/question-bank': { title: 'Ngân hàng câu hỏi',  subtitle: 'Câu hỏi cho bài kiểm tra' },
+  '/teacher/question-bank':        { title: 'Ngân hàng câu hỏi', subtitle: 'Câu hỏi cho bài kiểm tra' },
+  '/teacher/question-bank/create': { title: 'Thêm câu hỏi',      subtitle: 'Tạo câu hỏi mới cho ngân hàng' },
   '/student/dashboard':  { title: 'Trang chủ',           subtitle: 'Chào mừng bạn trở lại' },
   '/student/classes':    { title: 'Lớp học',             subtitle: 'Các lớp đang tham gia' },
   '/student/lessons':          { title: 'Bài học',          subtitle: 'Bài học từ các lớp của bạn' },

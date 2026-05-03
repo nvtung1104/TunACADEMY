@@ -97,13 +97,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Live / WebRTC (teachers + students)
     Route::prefix('live')->group(function () {
         Route::get('/ice-servers',                  [WebRTCController::class, 'iceServers']);
-        Route::get('/rooms/{room}/info',            [WebRTCController::class, 'sessionInfo']);
-        Route::get('/rooms/{room}/signals',         [WebRTCController::class, 'pollSignals']);
-        Route::get('/rooms/{room}/messages',        [WebRTCController::class, 'getMessages']);
-        Route::post('/rooms/{room}/message',        [WebRTCController::class, 'sendMessage']);
+        Route::get('/rooms/{session}/info',            [WebRTCController::class, 'sessionInfo']);
+        Route::get('/rooms/{session}/signals',         [WebRTCController::class, 'pollSignals']);
+        Route::get('/rooms/{session}/messages',        [WebRTCController::class, 'getMessages']);
+        Route::post('/rooms/{session}/message',        [WebRTCController::class, 'sendMessage']);
         Route::post('/signal', [WebRTCController::class, 'signal']);
-        Route::post('/rooms/{room}/join', [WebRTCController::class, 'joinRoom']);
-        Route::post('/rooms/{room}/leave', [WebRTCController::class, 'leaveRoom']);
+        Route::post('/rooms/{session}/join', [WebRTCController::class, 'joinRoom']);
+        Route::post('/rooms/{session}/leave', [WebRTCController::class, 'leaveRoom']);
     });
 
     // ─── Admin ───────────────────────────────────────────────────────────────
@@ -157,6 +157,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/assignments/{assignment}/questions/{question}', [AdminContentController::class, 'deleteAssignmentQuestion']);
             Route::get('/live-sessions',                        [AdminContentController::class, 'liveSessions']);
             Route::post('/live-sessions',                       [AdminContentController::class, 'storeLiveSession']);
+            Route::get('/live-sessions/coverage',               [AdminContentController::class, 'checkLiveSessionCoverage']);
             Route::post('/live-sessions/create-for-all',        [AdminContentController::class, 'createLiveSessionsForAll']);
             Route::delete('/live-sessions/{liveSession}',       [AdminContentController::class, 'deleteLiveSession']);
         });
@@ -174,6 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:teacher')->prefix('teacher')->as('teacher.')->group(function () {
 
         Route::apiResource('classrooms', TeacherClassroomController::class);
+        Route::get('all-classrooms', [TeacherClassroomController::class, 'allClassrooms']);
         Route::get('my-subjects', [TeacherSubjectController::class, 'mySubjects']);
         Route::post('classrooms/{classroom}/students', [TeacherClassroomController::class, 'addStudent']);
         Route::delete('classrooms/{classroom}/students/{student}', [TeacherClassroomController::class, 'removeStudent']);

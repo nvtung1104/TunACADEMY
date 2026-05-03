@@ -268,7 +268,7 @@ function openShare(l) {
 async function loadSubjects() {
   if (!form.classroom_id) { subjects.value = []; return }
   try {
-    const { data } = await api.get('/admin/subjects', { params: { status: 'active' } })
+    const { data } = await api.get('/public/subjects')
     subjects.value = data.data ?? []
   } catch { subjects.value = [] }
 }
@@ -318,8 +318,8 @@ function formatDate(iso) { return iso ? new Date(iso).toLocaleDateString('vi-VN'
 
 onMounted(async () => {
   const [cr, sr] = await Promise.all([
-    api.get('/teacher/classrooms'),
-    api.get('/admin/subjects', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
+    api.get('/teacher/classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/public/subjects').catch(() => ({ data: { data: [] } })),
   ])
   classrooms.value = cr.data.data?.data ?? cr.data.data ?? []
   subjects.value = sr.data.data ?? []

@@ -9,6 +9,7 @@ class SchoolYear extends Model
 
     public function getStatusAttribute(): string
     {
+        if (!$this->start_date || !$this->end_date) return 'active';
         $today = now()->startOfDay();
         if ($today->lt($this->start_date)) return 'upcoming';
         if ($today->gt($this->end_date))   return 'ended';

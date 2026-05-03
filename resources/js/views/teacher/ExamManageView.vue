@@ -229,13 +229,39 @@
             <span class="text-sm text-gray-700">Cho phép thi lại</span>
           </label>
         </div>
+        <!-- Visibility -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Hiển thị</label>
-          <select v-model="form.visibility" class="input">
-            <option value="private">Riêng tư</option>
-            <option value="class">Cho lớp</option>
-            <option value="public">Công khai</option>
-          </select>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Gửi cho</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label v-for="opt in visibilityFormOptions" :key="opt.value"
+              class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors text-sm"
+              :class="form.visibility === opt.value ? 'border-[#d63015] bg-red-50 text-[#d63015] font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+              <input type="radio" :value="opt.value" v-model="form.visibility" class="sr-only" />
+              <span v-html="opt.icon" class="w-4 h-4 shrink-0"></span>
+              <div>
+                <p class="font-medium leading-tight">{{ opt.label }}</p>
+                <p class="text-[11px] text-gray-400 leading-tight mt-0.5">{{ opt.desc }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Class picker — only when visibility = 'class' -->
+        <div v-if="form.visibility === 'class'" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Khối <span class="text-red-500">*</span></label>
+            <select v-model="form.grade_id" @change="form.classroom_id = ''" class="input">
+              <option value="">Chọn khối</option>
+              <option v-for="g in grades" :key="g.id" :value="g.id">Khối {{ g.level }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lớp nhận bài <span class="text-red-500">*</span></label>
+            <select v-model="form.classroom_id" class="input" :disabled="!form.grade_id">
+              <option value="">Chọn lớp</option>
+              <option v-for="c in filteredClassrooms" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
         </div>
         <div v-if="formError" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ formError }}</div>
       </form>
@@ -319,12 +345,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 
 const exams = ref([])
 const classrooms = ref([])
+const allClassrooms = ref([])
 const subjects = ref([])
 const loading = ref(true)
 const modal = ref(false)
@@ -340,10 +367,29 @@ const formError = ref('')
 const shareError = ref('')
 const filters = reactive({ type: '', status: '' })
 const form = reactive({
-  type: 'quiz_15', title: '', description: '', classroom_id: '', subject_id: '',
+  type: 'quiz_15', title: '', description: '', classroom_id: '', grade_id: '', subject_id: '',
   duration_minutes: 15, opened_at: '', closed_at: '', visibility: 'private',
   shuffle_questions: false, shuffle_options: false,
   proctoring_enabled: false, allow_retake: false,
+})
+
+const grades = computed(() => {
+  const map = new Map()
+  allClassrooms.value.forEach(c => { if (c.grade && !map.has(c.grade.id)) map.set(c.grade.id, c.grade) })
+  return [...map.values()].sort((a, b) => a.level - b.level)
+})
+const filteredClassrooms = computed(() =>
+  form.grade_id ? allClassrooms.value.filter(c => c.grade_id === form.grade_id) : []
+)
+
+const visibilityFormOptions = [
+  { value: 'private', label: 'Riêng tư',    desc: 'Chỉ bạn xem được',         icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>' },
+  { value: 'class',   label: 'Gửi cho lớp', desc: 'Học sinh lớp được chọn',   icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' },
+  { value: 'public',  label: 'Công khai',   desc: 'Tất cả học sinh đều thấy', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
+]
+
+watch(() => form.visibility, (v) => {
+  if (v !== 'class') { form.classroom_id = ''; form.grade_id = '' }
 })
 const shareForm = reactive({ visibility: 'class', classroom_id: '', student_codes: '' })
 
@@ -380,9 +426,11 @@ function openCreate() {
 
 function openEdit(e) {
   editItem.value = e
+  const existingClass = allClassrooms.value.find(c => c.id === e.classroom?.id)
   Object.assign(form, {
     type: e.type ?? 'quiz_45', title: e.title, description: e.description ?? '',
-    classroom_id: e.classroom?.id ?? '', subject_id: e.subject?.id ?? '',
+    classroom_id: e.classroom?.id ?? '', grade_id: existingClass?.grade_id ?? '',
+    subject_id: e.subject?.id ?? '',
     duration_minutes: e.duration_minutes, visibility: e.visibility ?? 'private',
     opened_at: e.opened_at ? e.opened_at.slice(0, 16) : '',
     closed_at: e.closed_at ? e.closed_at.slice(0, 16) : '',
@@ -464,11 +512,13 @@ function statusClass(s) { return { draft: 'bg-amber-100 text-amber-700', publish
 function formatDate(iso) { return iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '' }
 
 onMounted(async () => {
-  const [cr, sr] = await Promise.all([
-    api.get('/teacher/classrooms'),
-    api.get('/admin/subjects', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
+  const [cr, allCr, sr] = await Promise.all([
+    api.get('/teacher/classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/teacher/all-classrooms').catch(() => ({ data: { data: [] } })),
+    api.get('/public/subjects').catch(() => ({ data: { data: [] } })),
   ])
   classrooms.value = cr.data.data?.data ?? cr.data.data ?? []
+  allClassrooms.value = allCr.data.data ?? []
   subjects.value = sr.data.data ?? []
   fetch()
 })

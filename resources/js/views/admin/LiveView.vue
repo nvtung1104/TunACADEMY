@@ -52,7 +52,11 @@
           <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
               <p class="font-semibold text-gray-800 truncate">{{ s.title }}</p>
-              <p class="text-xs text-gray-400 mt-0.5">{{ s.classroom?.name }} · {{ s.teacher?.name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                {{ s.classroom?.name }}
+                <template v-if="s.classroom?.homeroom_teacher">· GVCN: {{ s.classroom.homeroom_teacher.name }}</template>
+                <template v-else-if="s.teacher">· GV: {{ s.teacher.name }}</template>
+              </p>
             </div>
             <span class="ml-2 shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-semibold" :class="liveStatusClass(s.status)">
               {{ liveStatusLabel(s.status) }}
@@ -142,15 +146,33 @@
 
     <!-- Bulk create confirm modal -->
     <AppModal v-model="bulkModal" title="Tạo phòng học cho tất cả lớp" size="sm">
-      <p class="text-sm text-gray-600">
-        Hệ thống sẽ tự động tạo <strong>1 phòng học thường trực</strong> cho mỗi lớp học chưa có phòng.
-        Lớp đã có phòng thường trực sẽ bỏ qua.
-      </p>
+      <!-- Checking -->
+      <div v-if="bulkChecking" class="flex items-center gap-2 text-sm text-gray-500 py-2">
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+        Đang kiểm tra danh sách lớp...
+      </div>
+      <!-- All covered -->
+      <div v-else-if="bulkMissing.length === 0" class="flex items-start gap-3 py-1">
+        <svg class="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-sm text-gray-700">Tất cả lớp học đã có phòng học rồi, không cần tạo thêm.</p>
+      </div>
+      <!-- Has missing -->
+      <div v-else class="space-y-3">
+        <p class="text-sm text-gray-600">Còn <strong class="text-indigo-600">{{ bulkMissing.length }} lớp</strong> chưa có phòng học thường trực:</p>
+        <ul class="text-sm text-gray-700 space-y-1 max-h-48 overflow-y-auto pr-1">
+          <li v-for="c in bulkMissing" :key="c.id" class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"/>
+            <span>{{ c.name }}<span v-if="c.teacher" class="text-gray-400"> — GV. {{ c.teacher }}</span></span>
+          </li>
+        </ul>
+      </div>
       <template #footer>
-        <button @click="bulkModal = false" class="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Hủy</button>
-        <button @click="doBulkCreate" :disabled="bulkCreating"
+        <button @click="bulkModal = false" class="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">
+          {{ bulkMissing.length === 0 && !bulkChecking ? 'Đóng' : 'Hủy' }}
+        </button>
+        <button v-if="bulkMissing.length > 0" @click="doBulkCreate" :disabled="bulkCreating"
           class="px-4 py-2 text-sm rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-60">
-          {{ bulkCreating ? 'Đang tạo...' : 'Xác nhận' }}
+          {{ bulkCreating ? 'Đang tạo...' : `Tạo ${bulkMissing.length} phòng` }}
         </button>
       </template>
     </AppModal>
@@ -194,7 +216,9 @@ const classrooms = ref([])
 const form = ref({ classroom_id: '', title: '', description: '', scheduled_at: '', duration_minutes: 45, max_participants: 50 })
 
 const bulkModal = ref(false)
+const bulkChecking = ref(false)
 const bulkCreating = ref(false)
+const bulkMissing = ref([])
 
 let debounceTimer = null
 function debounceFetch() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => fetchData(), 400) }
@@ -243,15 +267,30 @@ async function doCreate() {
   } finally { creating.value = false }
 }
 
-function openBulkCreate() { bulkModal.value = true }
+async function openBulkCreate() {
+  bulkMissing.value = []
+  bulkChecking.value = true
+  bulkModal.value = true
+  try {
+    const { data } = await api.get('/admin/content/live-sessions/coverage')
+    bulkMissing.value = data.data?.missing ?? []
+  } catch {
+    bulkMissing.value = []
+  } finally {
+    bulkChecking.value = false
+  }
+}
 
 async function doBulkCreate() {
   bulkCreating.value = true
   try {
     const { data } = await api.post('/admin/content/live-sessions/create-for-all')
+    const createdFor = data.data?.created_for ?? []
     bulkModal.value = false
-    alert(`Đã tạo ${data.data?.created ?? 0} phòng học mới`)
     fetchData(1)
+    if (createdFor.length > 0) {
+      alert(`Đã tạo phòng học cho:\n• ${createdFor.join('\n• ')}`)
+    }
   } catch (e) {
     alert(e.response?.data?.message ?? 'Tạo thất bại')
   } finally { bulkCreating.value = false }

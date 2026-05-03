@@ -231,7 +231,7 @@ const router = useRouter()
 const auth   = useAuthStore()
 
 const sessionId = route.params.id
-const myUserId  = auth.user?.id
+const myUserId  = computed(() => auth.user?.id)
 
 // ── State ─────────────────────────────────────────────────────────────────
 const session      = ref(null)
@@ -286,7 +286,10 @@ const gridClass = computed(() => {
   return 'grid-cols-3 grid-rows-3'
 })
 
-const isHost = computed(() => session.value?.teacher?.id === myUserId)
+const isHost = computed(() =>
+  session.value?.teacher?.id === myUserId.value ||
+  session.value?.classroom?.homeroom_teacher?.id === myUserId.value
+)
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function getInitials(name = '') {
@@ -417,7 +420,7 @@ async function pollMessages() {
       messages.value.push({ id: m.id, userId: m.user_id, name: m.user?.name ?? `User ${m.user_id}`, text: m.message })
       lastMessageId = Math.max(lastMessageId, m.id)
     })
-    if (!showChat.value) unreadCount.value += newMsgs.filter(m => m.user_id !== myUserId).length
+    if (!showChat.value) unreadCount.value += newMsgs.filter(m => m.user_id !== myUserId.value).length
     await nextTick()
     if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight
   } catch {}
@@ -428,10 +431,10 @@ async function refreshParticipants() {
     const { data } = await api.get(`/live/rooms/${sessionId}/info`)
     const active = data.data.participants ?? []
     const activeIds = new Set(active.map(p => p.user_id))
-    activeIds.add(myUserId)
+    activeIds.add(myUserId.value)
 
     for (const p of active) {
-      if (p.user_id === myUserId) continue
+      if (p.user_id === myUserId.value) continue
       if (!participants.value.find(x => x.userId === p.user_id)) {
         participants.value.push({ userId: p.user_id, name: p.user?.name ?? `User ${p.user_id}`, isMe: false, isHost: p.role === 'host', camOn: true, micOn: true, status: 'connecting' })
         await createPeerConnection(p.user_id, true)
@@ -450,11 +453,32 @@ function toggleMic() {
   if (me) me.micOn = micOn.value
 }
 
-function toggleCam() {
+async function toggleCam() {
   camOn.value = !camOn.value
-  localStream?.getVideoTracks().forEach(t => { t.enabled = camOn.value })
   const me = participants.value.find(p => p.isMe)
   if (me) me.camOn = camOn.value
+
+  if (!camOn.value) {
+    // stop() giải phóng hardware → LED camera tắt hẳn
+    localStream?.getVideoTracks().forEach(t => t.stop())
+  } else {
+    try {
+      const lobby = JSON.parse(sessionStorage.getItem(`live_lobby_${sessionId}`) || '{}')
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: lobby.selectedCamera ? { deviceId: { exact: lobby.selectedCamera } } : true,
+      })
+      const newTrack = newStream.getVideoTracks()[0]
+      if (localStream) {
+        localStream.getVideoTracks().forEach(t => localStream.removeTrack(t))
+        localStream.addTrack(newTrack)
+      }
+      peerConnections.forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video')
+        if (sender) sender.replaceTrack(newTrack)
+      })
+      applyStream(myUserId.value, localStream)
+    } catch {}
+  }
 }
 
 async function toggleScreenShare() {
@@ -467,7 +491,7 @@ async function toggleScreenShare() {
       const sender = pc.getSenders().find(s => s.track?.kind === 'video')
       if (sender) sender.replaceTrack(camTrack)
     })
-    applyStream(myUserId, localStream)
+    applyStream(myUserId.value, localStream)
   } else {
     try {
       screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
@@ -479,7 +503,7 @@ async function toggleScreenShare() {
         if (sender) sender.replaceTrack(screenTrack)
       })
       const combined = new MediaStream([screenTrack, ...(localStream?.getAudioTracks() ?? [])])
-      applyStream(myUserId, combined)
+      applyStream(myUserId.value, combined)
     } catch {}
   }
 }
@@ -498,7 +522,7 @@ async function sendChat() {
   const text = chatInput.value.trim()
   if (!text) return
   chatInput.value = ''
-  const temp = { id: Date.now(), userId: myUserId, name: auth.user?.name || 'Bạn', text }
+  const temp = { id: Date.now(), userId: myUserId.value, name: auth.user?.name || 'Bạn', text }
   messages.value.push(temp)
   await nextTick()
   if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight
@@ -548,15 +572,15 @@ onMounted(async () => {
 
   // Add self tile
   const self = {
-    userId: myUserId, name: auth.user?.name || 'Bạn',
-    isMe: true, isHost: session.value?.teacher?.id === myUserId,
+    userId: myUserId.value, name: auth.user?.name || 'Bạn',
+    isMe: true, isHost: isHost.value,
     camOn: camOn.value, micOn: micOn.value, status: 'connected',
   }
   participants.value.push(self)
   if (localStream) {
-    streams.set(myUserId, localStream)
+    streams.set(myUserId.value, localStream)
     await nextTick()
-    const el = videoRefs.get(myUserId)
+    const el = videoRefs.get(myUserId.value)
     if (el) el.srcObject = localStream
   }
 
@@ -566,7 +590,7 @@ onMounted(async () => {
     iceServers = data.data.ice_servers ?? []
 
     for (const p of data.data.participants ?? []) {
-      if (p.user_id === myUserId) continue
+      if (p.user_id === myUserId.value) continue
       participants.value.push({
         userId: p.user_id, name: p.user?.name ?? `User ${p.user_id}`,
         isMe: false, isHost: p.role === 'host',

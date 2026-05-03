@@ -31,15 +31,15 @@ class LiveController extends Controller
         abort_if($session->participants()->whereNull('left_at')->count() >= $session->max_participants, 422, 'Phòng học đã đầy');
 
         LiveParticipant::updateOrCreate(
-            ['live_session_id' => $session->id, 'user_id' => $request->user()->id],
-            ['joined_at' => now(), 'left_at' => null]
+            ['session_id' => $session->id, 'user_id' => $request->user()->id],
+            ['joined_at' => now(), 'left_at' => null, 'role' => 'student']
         );
         return $this->success(['room_code' => $session->room_code], 'Tham gia thành công');
     }
 
     public function leave(Request $request, LiveSession $session)
     {
-        LiveParticipant::where(['live_session_id' => $session->id, 'user_id' => $request->user()->id])
+        LiveParticipant::where(['session_id' => $session->id, 'user_id' => $request->user()->id])
             ->whereNull('left_at')->update(['left_at' => now()]);
         return $this->success(null, 'Rời phòng thành công');
     }

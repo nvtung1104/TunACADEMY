@@ -8,10 +8,26 @@ use Illuminate\Http\Request;
 
 class ClassroomController extends Controller
 {
+    public function allClassrooms(Request $request)
+    {
+        $classrooms = Classroom::with('grade')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'grade_id']);
+
+        return $this->success($classrooms->map(fn($c) => [
+            'id'       => $c->id,
+            'name'     => $c->name,
+            'grade_id' => $c->grade_id,
+            'grade'    => $c->grade ? ['id' => $c->grade->id, 'level' => $c->grade->level, 'name' => $c->grade->name] : null,
+        ]));
+    }
+
     public function index(Request $request)
     {
         $uid = $request->user()->id;
         $classrooms = Classroom::with(['grade', 'schoolYear'])
+            ->withCount('students')
             ->where(function ($q) use ($uid) {
                 $q->whereHas('subjectTeachers', fn($q) => $q->where('teacher_id', $uid))
                   ->orWhere('homeroom_teacher_id', $uid);
@@ -22,7 +38,7 @@ class ClassroomController extends Controller
     public function show(Request $request, Classroom $classroom)
     {
         $this->gate($request, $classroom);
-        return $this->success(new ClassroomResource($classroom->load(['grade', 'schoolYear', 'students'])));
+        return $this->success(new ClassroomResource($classroom->load(['grade', 'schoolYear', 'students', 'subjectTeachers.teacher', 'subjectTeachers.subject'])));
     }
 
     public function addStudent(Request $request, Classroom $classroom)

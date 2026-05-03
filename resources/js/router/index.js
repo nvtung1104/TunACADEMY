@@ -78,6 +78,8 @@ const router = createRouter({
         { path: 'assignments', component: () => import('@/views/teacher/AssignmentManageView.vue') },
         { path: 'grades', component: () => import('@/views/teacher/GradeView.vue') },
         { path: 'question-bank', component: () => import('@/views/teacher/QuestionBankView.vue') },
+        { path: 'question-bank/create', component: () => import('@/views/teacher/QuestionCreateView.vue') },
+        { path: 'question-bank/:id/edit', component: () => import('@/views/teacher/QuestionCreateView.vue') },
         { path: 'live', component: () => import('@/views/teacher/LiveManageView.vue') },
       ],
     },

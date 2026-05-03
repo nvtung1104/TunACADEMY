@@ -12,6 +12,7 @@ use App\Models\Lesson;
 use App\Models\LessonMaterial;
 use App\Models\LiveSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -273,7 +274,7 @@ class ContentController extends Controller
 
     public function liveSessions(Request $request)
     {
-        $query = LiveSession::with(['classroom.grade', 'subject:id,name,color', 'teacher:id,name'])
+        $query = LiveSession::with(['classroom.grade', 'classroom.homeroomTeacher:id,name', 'subject:id,name,color', 'teacher:id,name'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->search, fn($q) => $q->where('title', 'like', "%{$request->search}%"));
         return response()->json($query->orderByDesc('created_at')->paginate(15));
@@ -292,8 +293,12 @@ class ContentController extends Controller
         ]);
 
         if (!empty($data['classroom_id'])) {
-            $classroom = Classroom::find($data['classroom_id']);
-            $data['teacher_id'] = $classroom->teacher_id ?? $request->user()->id;
+            $classroom = Classroom::with('homeroomTeacher:id,name')->find($data['classroom_id']);
+            $data['teacher_id'] = $classroom->homeroom_teacher_id ?? $request->user()->id;
+            if (empty($data['title'])) {
+                $teacherName = $classroom->homeroomTeacher?->name;
+                $data['title'] = 'Phòng học ' . $classroom->name . ($teacherName ? ' - GV. ' . $teacherName : '');
+            }
         } else {
             $data['classroom_id'] = null;
             $data['teacher_id']   = $request->user()->id;
@@ -309,27 +314,61 @@ class ContentController extends Controller
         );
     }
 
+    public function checkLiveSessionCoverage()
+    {
+        $missing = Classroom::with('homeroomTeacher:id,name')
+            ->whereDoesntHave('liveSessions', fn($q) => $q->where('is_permanent', true))
+            ->get(['id', 'name', 'homeroom_teacher_id'])
+            ->map(fn($c) => [
+                'id'      => $c->id,
+                'name'    => $c->name,
+                'teacher' => $c->homeroomTeacher?->name,
+            ]);
+
+        return $this->success([
+            'all_covered' => $missing->isEmpty(),
+            'missing'     => $missing,
+        ]);
+    }
+
     public function createLiveSessionsForAll(Request $request)
     {
-        $classrooms = Classroom::whereDoesntHave('liveSessions', fn($q) => $q->where('is_permanent', true))
-            ->get();
+        $createdFor = DB::transaction(function () use ($request) {
+            // Khoá lại để tránh tạo trùng khi bấm nhiều lần
+            $classrooms = Classroom::with('homeroomTeacher:id,name')
+                ->whereDoesntHave('liveSessions', fn($q) => $q->where('is_permanent', true))
+                ->lockForUpdate()
+                ->get();
 
-        $created = 0;
-        foreach ($classrooms as $classroom) {
-            LiveSession::create([
-                'classroom_id'    => $classroom->id,
-                'teacher_id'      => $classroom->teacher_id ?? $request->user()->id,
-                'title'           => 'Phòng học ' . $classroom->name,
-                'room_code'       => Str::upper(Str::random(8)),
-                'status'          => 'scheduled',
-                'is_permanent'    => true,
-                'duration_minutes'=> 45,
-                'max_participants'=> 50,
-            ]);
-            $created++;
-        }
+            $created = [];
+            foreach ($classrooms as $classroom) {
+                // Double-check bên trong transaction
+                $exists = LiveSession::where('classroom_id', $classroom->id)
+                    ->where('is_permanent', true)
+                    ->exists();
+                if ($exists) continue;
 
-        return $this->success(['created' => $created], "Đã tạo {$created} phòng học");
+                $teacherName = $classroom->homeroomTeacher?->name;
+                LiveSession::create([
+                    'classroom_id'    => $classroom->id,
+                    'teacher_id'      => $classroom->homeroom_teacher_id ?? $request->user()->id,
+                    'title'           => 'Phòng học ' . $classroom->name . ($teacherName ? ' - GV. ' . $teacherName : ''),
+                    'room_code'       => Str::upper(Str::random(8)),
+                    'status'          => 'scheduled',
+                    'is_permanent'    => true,
+                    'duration_minutes'=> 45,
+                    'max_participants'=> 50,
+                ]);
+                $created[] = $classroom->name . ($teacherName ? ' (GV. ' . $teacherName . ')' : '');
+            }
+            return $created;
+        });
+
+        $count = count($createdFor);
+        return $this->success(
+            ['created' => $count, 'created_for' => $createdFor],
+            $count > 0 ? "Đã tạo {$count} phòng học" : 'Tất cả lớp đã có phòng học'
+        );
     }
 
     public function deleteLiveSession(LiveSession $liveSession)

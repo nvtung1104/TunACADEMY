@@ -10,7 +10,7 @@
         </div>
         <span class="text-white font-bold text-lg">TunAcademy Live</span>
       </div>
-      <button @click="$router.back()" class="text-gray-400 hover:text-white text-sm flex items-center gap-1.5 transition-colors">
+      <button @click="exitLobby" class="text-gray-400 hover:text-white text-sm flex items-center gap-1.5 transition-colors">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -199,12 +199,14 @@
               </div>
               <div class="grid grid-cols-2 gap-2.5 text-xs">
                 <div class="bg-white/5 rounded-xl p-2.5">
-                  <p class="text-gray-500 mb-0.5">Giáo viên</p>
-                  <p class="text-gray-200 font-medium truncate">{{ session?.teacher?.name }}</p>
+                  <p class="text-gray-500 mb-0.5">{{ session?.classroom ? 'GVCN' : 'Giáo viên' }}</p>
+                  <p class="text-gray-200 font-medium truncate">
+                    {{ session?.classroom?.homeroom_teacher?.name ?? session?.teacher?.name ?? '—' }}
+                  </p>
                 </div>
                 <div class="bg-white/5 rounded-xl p-2.5">
                   <p class="text-gray-500 mb-0.5">Mã phòng</p>
-                  <p class="text-gray-200 font-mono font-bold tracking-wider">{{ session?.room_code }}</p>
+                  <p class="text-gray-200 font-mono font-bold tracking-wider">{{ session?.room_code ?? '—' }}</p>
                 </div>
                 <div class="bg-white/5 rounded-xl p-2.5">
                   <p class="text-gray-500 mb-0.5">Trong phòng</p>
@@ -319,7 +321,19 @@ const initials = computed(() =>
   (auth.user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 )
 const isAdmin = computed(() => auth.role === 'admin')
-const isHost  = computed(() => isAdmin.value || session.value?.teacher?.id === auth.user?.id)
+const isHost  = computed(() =>
+  isAdmin.value ||
+  session.value?.teacher?.id === auth.user?.id ||
+  session.value?.classroom?.homeroom_teacher?.id === auth.user?.id
+)
+
+function exitLobby() {
+  videoStream?.getTracks().forEach(t => t.stop())
+  audioStream?.getTracks().forEach(t => t.stop())
+  if (isAdmin.value) router.push('/admin/live')
+  else if (isHost.value) router.push('/teacher/live')
+  else router.push('/student/live')
+}
 
 const camBtnClass = computed(() => {
   if (camPerm.value === 'granted') return camOn.value ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
