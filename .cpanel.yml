@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/zkmalfey/public_html/
+    - /bin/rsync -avz --exclude='.git' --exclude='node_modules' --exclude='.env' $cpanel_source_dir/ $DEPLOYPATH
