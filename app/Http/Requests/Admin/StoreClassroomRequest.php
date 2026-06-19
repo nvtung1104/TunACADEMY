@@ -4,7 +4,10 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 class StoreClassroomRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return $this->user()?->hasRole('admin') ?? false;
+    }
     public function rules(): array
     {
         // Khi update, bỏ qua chính lớp đang sửa

@@ -55,7 +55,7 @@
             <button v-if="!c.is_live"
               @click="startRoom(c)"
               :disabled="c.starting"
-              class="flex-1 py-2.5 rounded-xl bg-[#d63015] hover:bg-[#c02a10] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+              class="flex-1 py-2.5 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -89,8 +89,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@api/axios'
+import { useToastStore }   from '@stores/toast'
+import { useConfirmStore } from '@stores/confirm'
 
 const router = useRouter()
+const toast        = useToastStore()
+const confirmStore = useConfirmStore()
 const classrooms = ref([])
 const loading = ref(true)
 
@@ -125,21 +129,21 @@ async function startRoom(c) {
     c.session = data.data
     c.is_live = true
   } catch (e) {
-    alert(e.response?.data?.message ?? 'Không thể mở phòng')
+    toast.error(e.response?.data?.message ?? 'Không thể mở phòng')
   } finally {
     c.starting = false
   }
 }
 
 async function endRoom(c) {
-  if (!confirm(`Kết thúc phòng học "${c.name}"?`)) return
+  if (!await confirmStore.ask(`Kết thúc phòng học "${c.name}"?`)) return
   c.ending = true
   try {
     await api.post(`/teacher/classrooms/${c.id}/room/end`)
     c.is_live = false
     c.session = null
   } catch (e) {
-    alert(e.response?.data?.message ?? 'Không thể kết thúc phòng')
+    toast.error(e.response?.data?.message ?? 'Không thể kết thúc phòng')
   } finally {
     c.ending = false
   }

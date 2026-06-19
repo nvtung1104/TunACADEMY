@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         ]);
         $admin->syncRoles(['admin']);
 
-        $teachers = [
+        $teachers = [   
             [
                 'name'          => 'Nguyen Van An',
                 'email'         => 'teacher1@tunacademy.com',
@@ -58,7 +58,7 @@ class UserSeeder extends Seeder
                 'status'               => 'active',
                 'must_change_password' => false,
             ]);
-            $teacher->syncRoles(['teacher']);
+            $teacher->syncRoles(['teacher']);   
         }
 
         $students = [
@@ -120,5 +120,48 @@ class UserSeeder extends Seeder
             ]);
             $student->syncRoles(['student']);
         }
+
+        // Demo accounts for thesis demonstration (Section 4.4.4)
+        $demoAdmin = User::updateOrCreate(['email' => 'admin@demo.com'], [
+            'name'                 => 'Admin Demo',
+            'password'             => Hash::make('password'),
+            'phone'                => '0900000099',
+            'date_of_birth'        => '1980-01-01',
+            'gender'               => 'male',
+            'address'              => 'Ha Noi',
+            'qualification'        => 'Quan tri he thong',
+            'status'               => 'active',
+            'must_change_password' => false,
+        ]);
+        $demoAdmin->syncRoles(['admin']);
+
+        $demoTeacher = User::updateOrCreate(['email' => 'teacher@demo.com'], [
+            'name'                 => 'Teacher Demo',
+            'password'             => Hash::make('password'),
+            'phone'                => '0912000099',
+            'date_of_birth'        => '1985-01-01',
+            'gender'               => 'male',
+            'address'              => 'Ha Noi',
+            'qualification'        => 'Cu nhan Su pham',
+            'status'               => 'active',
+            'must_change_password' => false,
+        ]);
+        $demoTeacher->syncRoles(['teacher']);
+
+        $demoStudent = User::updateOrCreate(['email' => 'student@demo.com'], [
+            'name'                 => 'Student Demo',
+            'password'             => Hash::make('password'),
+            'phone'                => '0933000099',
+            'date_of_birth'        => '2010-01-01',
+            'gender'               => 'male',
+            'address'              => 'Ha Noi',
+            'parent_name'          => 'Phu Huynh Demo',
+            'parent_phone'         => '0911111199',
+            'parent_email'         => 'phuhuynh.demo@gmail.com',
+            'parent_address'       => 'Ha Noi',
+            'status'               => 'active',
+            'must_change_password' => false,
+        ]);
+        $demoStudent->syncRoles(['student']);
     }
 }

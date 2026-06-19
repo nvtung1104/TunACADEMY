@@ -449,6 +449,20 @@ class ContentController extends Controller
         ], 'Tải lên thành công', 201);
     }
 
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|image|mimes:jpg,jpeg,png,gif,webp,svg|max:10240',
+        ]);
+
+        $path = $request->file('file')->store('media/images', 'public');
+
+        return $this->success([
+            'path' => $path,
+            'url'  => asset('storage/' . $path),
+        ], 'Tải lên thành công', 201);
+    }
+
     private function validateQuestion(Request $request): array
     {
         return $request->validate([

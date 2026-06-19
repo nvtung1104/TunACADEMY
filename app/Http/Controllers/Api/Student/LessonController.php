@@ -13,7 +13,7 @@ class LessonController extends Controller
     {
         $classroomIds = $request->user()->classroomStudents()->pluck('classroom_id');
         $perPage = min((int) ($request->per_page ?? 20), 200);
-        $lessons = Lesson::with(['subject', 'teacher'])
+        $lessons = Lesson::with(['subject', 'teacher', 'studentProgress'])
             ->whereIn('classroom_id', $classroomIds)
             ->published()
             ->when($request->classroom_id, fn($q) => $q->where('classroom_id', $request->classroom_id))
@@ -30,7 +30,7 @@ class LessonController extends Controller
         $lesson->increment('view_count');
         $progress = StudyProgress::firstOrCreate(['lesson_id' => $lesson->id, 'student_id' => $request->user()->id]);
         return $this->success([
-            'lesson'   => new LessonResource($lesson->load(['materials', 'slides', 'teacher'])),
+            'lesson'   => new LessonResource($lesson->load(['materials', 'slides', 'teacher', 'questions'])),
             'progress' => $progress,
         ]);
     }

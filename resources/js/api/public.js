@@ -14,4 +14,5 @@ export default {
   assignmentTake: (id) => api.get(`/public/assignments/${id}/take`),
   assignmentSubmit: (id, answers) => api.post(`/public/assignments/${id}/submit`, { answers }),
   classrooms: (params) => api.get('/public/classrooms', { params }),
+  aiReview: (payload) => api.post('/public/ai-review', payload),
 }

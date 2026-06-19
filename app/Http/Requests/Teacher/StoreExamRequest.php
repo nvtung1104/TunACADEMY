@@ -2,12 +2,31 @@
 
 namespace App\Http\Requests\Teacher;
 
+use App\Http\Requests\Concerns\SanitizesHtml;
+use App\Models\Exam;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreExamRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    use SanitizesHtml;
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'title'       => $this->stripAllHtml($this->input('title')),
+            'description' => $this->stripAllHtml($this->input('description')),
+        ]);
+    }
+
+    public function authorize(): bool
+    {
+        $exam = $this->route('exam');
+        if ($exam instanceof Exam) {
+            return $this->user()->can('update', $exam);
+        }
+        return $this->user()->can('create', Exam::class);
+    }
 
     public function rules(): array
     {

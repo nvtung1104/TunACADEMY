@@ -6,6 +6,8 @@ import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 
 import '../css/app.css'
+import 'katex/dist/katex.min.css'
+import 'animate.css'
 
 // Laravel Echo — connects to Reverb WebSocket
 window.Pusher = Pusher

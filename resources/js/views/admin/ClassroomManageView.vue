@@ -31,7 +31,7 @@
             <h3 class="font-semibold text-gray-900">{{ c.name }}</h3>
             <p class="text-xs text-gray-500 mt-0.5">{{ c.school_year?.name }} · Khối {{ c.grade?.level }}</p>
             <p class="text-xs mt-1.5 flex items-center gap-1"
-              :class="c.homeroom_teacher ? 'text-indigo-600' : 'text-gray-300 italic'">
+              :class="c.homeroom_teacher ? 'text-[#d63015]' : 'text-gray-300 italic'">
               <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
               </svg>
@@ -60,7 +60,7 @@
 
         <div class="flex gap-2">
           <button @click="openStudents(c)"
-            class="flex-1 py-1.5 rounded-lg bg-indigo-50 text-xs text-indigo-700 hover:bg-indigo-100 font-medium transition-colors flex items-center justify-center gap-1">
+            class="flex-1 py-1.5 rounded-lg bg-red-50 text-xs text-[#c02a10] hover:bg-red-100 font-medium transition-colors flex items-center justify-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             Học sinh
           </button>
@@ -152,7 +152,7 @@
                 class="text-xs px-2.5 py-1 rounded-lg font-medium transition-colors"
                 :class="enrolledIds.has(u.id)
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'">
+                  : 'bg-[#d63015] hover:bg-[#c02a10] text-white'">
                 {{ enrolledIds.has(u.id) ? 'Đã có' : (addingId === u.id ? '...' : 'Thêm') }}
               </button>
             </div>
@@ -175,7 +175,7 @@
             <div v-for="s in enrolledStudents" :key="s.id"
               class="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-700 shrink-0">
+                <div class="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center text-xs font-semibold text-[#c02a10] shrink-0">
                   {{ s.name?.charAt(0)?.toUpperCase() }}
                 </div>
                 <div class="min-w-0">
@@ -203,6 +203,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
+import { useToastStore }   from '@stores/toast'
+import { useConfirmStore } from '@stores/confirm'
+
+const toast        = useToastStore()
+const confirmStore = useConfirmStore()
 
 // ── List ──────────────────────────────────────────────────
 const classrooms    = ref([])
@@ -259,9 +264,9 @@ async function save() {
 }
 
 async function deleteClassroom(c) {
-  if (!confirm(`Xóa lớp "${c.name}"?`)) return
+  if (!await confirmStore.ask(`Xóa lớp "${c.name}"?`)) return
   try { await api.delete(`/admin/classrooms/${c.id}`); fetch() }
-  catch (e) { alert(e.response?.data?.message ?? 'Không thể xóa') }
+  catch (e) { toast.error(e.response?.data?.message ?? 'Không thể xóa') }
 }
 
 // ── Student management ────────────────────────────────────
@@ -328,17 +333,17 @@ async function addStudent(u) {
     await api.post(`/admin/classrooms/${selectedClass.value.id}/students`, { student_id: u.id })
     await loadEnrolled()
     searchResults.value = searchResults.value.filter(s => s.id !== u.id)
-  } catch (e) { alert(e.response?.data?.message ?? 'Không thể thêm học sinh') }
+  } catch (e) { toast.error(e.response?.data?.message ?? 'Không thể thêm học sinh') }
   finally { addingId.value = null }
 }
 
 async function removeStudent(studentId) {
-  if (!confirm('Xóa học sinh khỏi lớp?')) return
+  if (!await confirmStore.ask('Xóa học sinh khỏi lớp?')) return
   removingId.value = studentId
   try {
     await api.delete(`/admin/classrooms/${selectedClass.value.id}/students/${studentId}`)
     await loadEnrolled()
-  } catch (e) { alert(e.response?.data?.message ?? 'Không thể xóa học sinh') }
+  } catch (e) { toast.error(e.response?.data?.message ?? 'Không thể xóa học sinh') }
   finally { removingId.value = null }
 }
 

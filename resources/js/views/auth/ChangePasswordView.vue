@@ -6,12 +6,12 @@
         <div v-for="f in fields" :key="f.key">
           <label class="block text-sm font-medium text-gray-700 mb-1">{{ f.label }}</label>
           <input v-model="form[f.key]" type="password" :placeholder="f.placeholder"
-            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" required />
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm" required />
         </div>
         <div v-if="error" class="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{{ error }}</div>
         <div v-if="success" class="text-sm text-green-600 bg-green-50 p-3 rounded-xl">{{ success }}</div>
         <button type="submit" :disabled="loading"
-          class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm disabled:opacity-60">
+          class="w-full py-2.5 rounded-xl bg-[#d63015] hover:bg-[#c02a10] text-white font-semibold text-sm disabled:opacity-60">
           {{ loading ? 'Đang lưu...' : 'Cập nhật mật khẩu' }}
         </button>
       </form>

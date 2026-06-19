@@ -72,9 +72,56 @@ class WebRTCController extends Controller
     public function sessionInfo(LiveSession $session)
     {
         return $this->success([
-            'session'      => $session->load(['classroom.grade', 'classroom.homeroomTeacher:id,name', 'subject:id,name,color', 'teacher:id,name']),
+            'session'      => $session->load([
+                'classroom.grade', 
+                'classroom.homeroomTeacher:id,name', 
+                'subject:id,name,color', 
+                'teacher:id,name',
+                'activeLesson.materials',
+                'activeAssignment.questions'
+            ]),
             'participants' => $session->participants()->whereNull('left_at')->with('user:id,name,avatar')->get(),
         ]);
+    }
+
+    public function updatePresentation(Request $request, LiveSession $session)
+    {
+        $userId = $request->user()->id;
+        $isHost = $request->user()->isAdmin()
+            || $session->teacher_id === $userId
+            || optional($session->classroom)->homeroom_teacher_id === $userId;
+
+        abort_unless($isHost, 403, 'Bạn không có quyền trình chiếu.');
+
+        $data = $request->validate([
+            'presentation_type'    => 'required|in:none,lesson,assignment',
+            'active_lesson_id'     => 'nullable|exists:lessons,id',
+            'active_assignment_id' => 'nullable|exists:assignments,id',
+        ]);
+
+        $session->update($data);
+
+        // Broadcast a presentation_changed signal to other users in the room
+        $pIds = $session->participants()
+            ->whereNull('left_at')
+            ->where('user_id', '!=', $userId)
+            ->pluck('user_id');
+
+        foreach ($pIds as $pId) {
+            WebrtcSignal::create([
+                'session_id'   => $session->id,
+                'from_user_id' => $userId,
+                'to_user_id'   => $pId,
+                'signal_type'  => 'presentation_changed',
+                'payload'      => [
+                    'presentation_type'    => $data['presentation_type'],
+                    'active_lesson_id'     => $data['active_lesson_id'],
+                    'active_assignment_id' => $data['active_assignment_id'],
+                ],
+            ]);
+        }
+
+        return $this->success($session->load(['activeLesson.materials', 'activeAssignment.questions']), 'Cập nhật trình chiếu thành công');
     }
 
     public function pollSignals(Request $request, LiveSession $session)

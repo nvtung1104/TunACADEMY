@@ -9,14 +9,14 @@
     <!-- Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <!-- Tabs -->
-      <div class="flex border-b border-gray-100">
+      <div class="flex gap-2 p-2 bg-gray-50/50 backdrop-blur-sm border-b border-gray-100">
         <button
           v-for="tab in tabs" :key="tab.key"
           @click="activeTab = tab.key"
-          class="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors"
+          class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
           :class="activeTab === tab.key
-            ? 'border-indigo-600 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700'"
+            ? 'bg-[#7c3aed] text-white shadow-sm'
+            : 'text-gray-500 hover:bg-white hover:text-gray-700'"
         >
           <span v-html="tab.icon" />
           {{ tab.label }}
@@ -29,18 +29,18 @@
         <div class="flex flex-col items-center gap-6 mb-8">
           <!-- Avatar preview with current selected frame -->
           <div class="relative">
-            <div class="ring-4 ring-white shadow-md rounded-full">
+            <div class="relative p-1.5 rounded-full transition-all duration-300">
               <AvatarFrame
                 :src="avatarPreview"
                 :name="auth.user?.name"
                 :gender="auth.user?.gender"
                 :frame="selectedFrame"
-                :size="96"
+                :size="108"
               />
             </div>
             <button @click="$refs.avatarInput.click()"
               :disabled="avatarUploading"
-              class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md transition-colors disabled:opacity-60">
+              class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white flex items-center justify-center shadow-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-60 border border-white/20 backdrop-blur-md">
               <svg v-if="avatarUploading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -70,39 +70,40 @@
               </Transition>
             </div>
 
-            <div class="flex items-end gap-4">
+            <div class="flex items-center gap-6 py-2">
               <button
                 v-for="opt in frameOptions"
                 :key="opt.value"
                 @click="handleFrameSelect(opt.value)"
                 :disabled="frameLoading"
-                class="flex flex-col items-center gap-2 group disabled:opacity-60"
+                class="flex flex-col items-center gap-2 group disabled:opacity-60 relative focus:outline-none"
               >
                 <!-- Preview circle -->
                 <div
-                  class="rounded-full transition-all duration-200"
+                  class="p-1 rounded-full transition-all duration-300 bg-white"
                   :class="selectedFrame === opt.value
-                    ? 'ring-2 ring-offset-2 ring-indigo-500 shadow-md'
-                    : 'ring-1 ring-gray-200 hover:ring-indigo-300'"
+                    ? 'ring-2 ring-[#1a1a1a] shadow-sm scale-105'
+                    : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:scale-102'"
                 >
                   <AvatarFrame
                     :src="avatarPreview"
                     :name="auth.user?.name"
                     :frame="opt.value"
-                    :size="56"
+                    :size="52"
+                    :hasRing="false"
                   />
                 </div>
                 <!-- Label -->
                 <span
-                  class="text-xs font-medium transition-colors"
-                  :class="selectedFrame === opt.value ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'"
+                  class="text-xs font-semibold transition-colors"
+                  :class="selectedFrame === opt.value ? 'text-[#1a1a1a]' : 'text-gray-500 group-hover:text-gray-700'"
                 >
                   {{ opt.label }}
                 </span>
                 <!-- Selected dot -->
                 <div
-                  class="w-1.5 h-1.5 rounded-full transition-all"
-                  :class="selectedFrame === opt.value ? 'bg-indigo-500' : 'bg-transparent'"
+                  class="w-1.5 h-1.5 rounded-full transition-all duration-200"
+                  :class="selectedFrame === opt.value ? 'bg-[#7c3aed] scale-100' : 'bg-transparent scale-0'"
                 />
               </button>
             </div>
@@ -126,41 +127,41 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
             <!-- Họ và tên -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                 Họ và tên <span class="text-red-500">*</span>
               </label>
               <input v-model="profileForm.name" type="text" required
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                 placeholder="Nhập họ và tên" />
             </div>
 
             <!-- Email (readonly) -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
               <input :value="auth.user?.email" type="email" readonly
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 text-sm cursor-not-allowed" />
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-150 bg-gray-100/60 text-gray-500 text-sm cursor-not-allowed" />
             </div>
 
             <!-- Số điện thoại -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Số điện thoại</label>
               <input v-model="profileForm.phone" type="tel"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                 placeholder="Nhập số điện thoại" />
             </div>
 
             <!-- Ngày sinh -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Ngày sinh</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Ngày sinh</label>
               <input v-model="profileForm.date_of_birth" type="date"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all" />
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200" />
             </div>
 
             <!-- Giới tính -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Giới tính</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Giới tính</label>
               <select v-model="profileForm.gender"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white transition-all">
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200">
                 <option value="">Chọn giới tính</option>
                 <option value="male">Nam</option>
                 <option value="female">Nữ</option>
@@ -170,60 +171,60 @@
 
             <!-- Bằng cấp (chỉ hiện với teacher) -->
             <div v-if="auth.isTeacher">
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Bằng cấp / Chuyên môn</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Bằng cấp / Chuyên môn</label>
               <input v-model="profileForm.qualification" type="text"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                 placeholder="VD: Cử nhân Sư phạm Toán" />
             </div>
 
             <!-- Địa chỉ (full width) -->
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ</label>
               <textarea v-model="profileForm.address" rows="2"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all resize-none"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200 resize-none"
                 placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" />
             </div>
 
             <!-- Thông tin phụ huynh (chỉ học sinh) -->
             <template v-if="auth.isStudent">
-              <div class="md:col-span-2 pt-2 border-t border-gray-100">
-                <p class="text-sm font-semibold text-gray-700">Thông tin phụ huynh</p>
+              <div class="md:col-span-2 pt-2 border-t border-gray-150">
+                <p class="text-sm font-bold text-gray-800">Thông tin phụ huynh</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Họ tên phụ huynh</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Họ tên phụ huynh</label>
                 <input v-model="profileForm.parent_name" type="text"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                   placeholder="Nhập họ tên phụ huynh" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">SĐT phụ huynh</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">SĐT phụ huynh</label>
                 <input v-model="profileForm.parent_phone" type="tel"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                   placeholder="Nhập số điện thoại phụ huynh" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Gmail phụ huynh</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Gmail phụ huynh</label>
                 <input v-model="profileForm.parent_email" type="email"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200"
                   placeholder="Nhập gmail phụ huynh" />
               </div>
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ phụ huynh</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ phụ huynh</label>
                 <textarea v-model="profileForm.parent_address" rows="2"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all resize-none"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-800 text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#d63015] hover:border-gray-300 transition-all duration-200 resize-none"
                   placeholder="Địa chỉ của phụ huynh" />
               </div>
             </template>
           </div>
 
-          <div class="flex justify-end mt-8 pt-6 border-t border-gray-100">
+          <div class="flex justify-end mt-8 pt-6">
             <button type="submit" :disabled="profileLoading"
-              class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              class="flex items-center gap-2 px-8 py-3 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-semibold transition-all duration-200 shadow-sm active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed">
               <svg v-if="profileLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
-              {{ profileLoading ? 'Đang lưu...' : 'Cập nhật' }}
+              {{ profileLoading ? 'Đang lưu...' : 'Cập nhật thông tin' }}
             </button>
           </div>
         </form>
@@ -253,7 +254,7 @@
                 <input v-model="pwForm.current_password"
                   :type="showPw.current ? 'text' : 'password'"
                   required
-                  class="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                  class="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] focus:border-transparent text-sm transition-all"
                   placeholder="Nhập mật khẩu hiện tại" />
                 <button type="button" @click="showPw.current = !showPw.current"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -273,7 +274,7 @@
                 <input v-model="pwForm.password"
                   :type="showPw.new ? 'text' : 'password'"
                   required minlength="8"
-                  class="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                  class="w-full px-4 py-2.5 pr-11 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] focus:border-transparent text-sm transition-all"
                   placeholder="Tối thiểu 8 ký tự" />
                 <button type="button" @click="showPw.new = !showPw.new"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -304,7 +305,7 @@
                   :type="showPw.confirm ? 'text' : 'password'"
                   required
                   class="w-full px-4 py-2.5 pr-11 rounded-xl border focus:outline-none focus:ring-2 focus:border-transparent text-sm transition-all"
-                  :class="pwMismatch ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-indigo-500'"
+                  :class="pwMismatch ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-[#d63015]'"
                   placeholder="Nhập lại mật khẩu mới" />
                 <button type="button" @click="showPw.confirm = !showPw.confirm"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -318,7 +319,7 @@
             </div>
 
             <button type="submit" :disabled="pwLoading || pwMismatch"
-              class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2">
+              class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2">
               <svg v-if="pwLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -534,6 +535,5 @@ onMounted(async () => {
   if (!auth.user && auth.token) {
     await auth.fetchUser().catch(() => {})
   }
-  fetchFrames()
 })
 </script>

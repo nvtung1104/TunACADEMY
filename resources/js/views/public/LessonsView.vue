@@ -18,21 +18,21 @@
             v-model="filters.search"
             type="text"
             placeholder="Tìm kiếm tên bài học..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] focus:border-transparent text-sm"
             @input="debouncedFetch"
           />
         </div>
 
         <!-- Grade filter -->
         <select v-model="filters.grade_id" @change="fetchData"
-          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white min-w-36">
+          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm bg-white min-w-36">
           <option value="">Tất cả lớp</option>
           <option v-for="g in grades" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
 
         <!-- Subject filter -->
         <select v-model="filters.subject_id" @change="fetchData"
-          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white min-w-40">
+          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm bg-white min-w-40">
           <option value="">Tất cả môn</option>
           <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
@@ -68,16 +68,17 @@
     <!-- Grid -->
     <div v-else>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <RouterLink v-for="lesson in lessons" :key="lesson.id"
+        <RouterLink v-for="(lesson, index) in lessons" :key="lesson.id"
           :to="'/lessons/' + lesson.id"
-          class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all overflow-hidden cursor-pointer no-underline block">
+          class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-100 transition-all overflow-hidden cursor-pointer no-underline block animate__animated animate__fadeInUp card-animate"
+          :style="{ animationDelay: `${index * 75}ms` }">
           <!-- Color accent -->
-          <div class="h-1.5 w-full" :style="{ backgroundColor: lesson.subject?.color || '#6366f1' }" />
+          <div class="h-1.5 w-full" :style="{ backgroundColor: lesson.subject?.color || '#d63015' }" />
           <div class="p-6">
             <!-- Subject + Grade badges -->
             <div class="flex items-center gap-2 mb-3 flex-wrap">
               <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold"
-                :style="{ backgroundColor: (lesson.subject?.color || '#6366f1') + '18', color: lesson.subject?.color || '#6366f1' }">
+                :style="{ backgroundColor: (lesson.subject?.color || '#d63015') + '18', color: lesson.subject?.color || '#d63015' }">
                 {{ lesson.subject?.name ?? 'Môn học' }}
               </span>
               <span v-if="lesson.classroom?.grade?.name"
@@ -87,7 +88,7 @@
             </div>
 
             <!-- Title -->
-            <h3 class="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-700 transition-colors">
+            <h3 class="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#c02a10] transition-colors">
               {{ lesson.title }}
             </h3>
 
@@ -129,7 +130,7 @@
           <button v-else @click="goPage(page)"
             class="w-10 h-10 rounded-xl border text-sm font-medium transition-colors"
             :class="page === meta.current_page
-              ? 'bg-indigo-600 border-indigo-600 text-white'
+              ? 'bg-[#d63015] border-[#d63015] text-white'
               : 'border-gray-200 text-gray-700 hover:bg-gray-50'">
             {{ page }}
           </button>

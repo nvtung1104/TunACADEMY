@@ -20,6 +20,14 @@ export const useAuthStore = defineStore('auth', () => {
     return data.data
   }
 
+  async function googleLogin(credential) {
+    const { data } = await api.post('/auth/google', { credential })
+    token.value = data.data.token
+    user.value = data.data.user
+    localStorage.setItem('auth_token', token.value)
+    return data.data
+  }
+
   async function fetchUser() {
     const { data } = await api.get('/auth/me')
     user.value = data.data
@@ -40,5 +48,5 @@ export const useAuthStore = defineStore('auth', () => {
     return '/login'
   }
 
-  return { user, token, isLoggedIn, role, isAdmin, isTeacher, isStudent, login, fetchUser, logout, homeRoute }
+  return { user, token, isLoggedIn, role, isAdmin, isTeacher, isStudent, login, googleLogin, fetchUser, logout, homeRoute }
 })

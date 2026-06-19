@@ -23,7 +23,7 @@ class UserController extends Controller
             $q->where('name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%")
         );
 
-        return UserResource::collection($query->paginate($request->input('per_page', 20)));
+        return UserResource::collection($query->paginate(min((int) $request->input('per_page', 20), 100)));
     }
 
     public function store(StoreUserRequest $request)

@@ -129,7 +129,15 @@
 
     <!-- Main content -->
     <main class="flex-1">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <transition
+          enter-active-class="animate__animated animate__fadeIn animate__faster"
+          leave-active-class="animate__animated animate__fadeOut animate__faster"
+          mode="out-in"
+        >
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </main>
 
     <!-- Help Widget -->

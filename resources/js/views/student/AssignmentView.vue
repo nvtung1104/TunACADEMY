@@ -4,14 +4,14 @@
     <div class="flex gap-2">
       <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
         class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-        :class="activeTab === tab.value ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'">
+        :class="activeTab === tab.value ? 'bg-[#d63015] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-red-300'">
         {{ tab.label }}
       </button>
     </div>
 
     <!-- List -->
     <div v-if="loading" class="py-12 text-center text-gray-400">
-      <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+      <div class="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
       Đang tải...
     </div>
     <div v-else class="space-y-3">
@@ -66,7 +66,7 @@
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
               :class="isOverdue(a.due_date)
                 ? 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'">
+                : 'bg-[#d63015] text-white hover:bg-[#c02a10]'">
               {{ isOverdue(a.due_date) ? 'Xem bài' : 'Làm bài' }}
             </button>
             <span v-else class="text-xs text-gray-400">

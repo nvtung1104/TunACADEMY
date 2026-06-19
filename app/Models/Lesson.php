@@ -15,7 +15,12 @@ class Lesson extends Model
     public function materials()   { return $this->hasMany(LessonMaterial::class); }
     public function slides()      { return $this->hasMany(Slide::class); }
     public function progress()    { return $this->hasMany(StudyProgress::class); }
+    public function studentProgress()
+    {
+        return $this->hasOne(StudyProgress::class)->where('student_id', auth()->id() ?? 0);
+    }
     public function liveSessions(){ return $this->hasMany(LiveSession::class); }
     public function shares()      { return $this->morphMany(ContentShare::class, 'shareable'); }
+    public function questions()   { return $this->hasMany(QuestionBank::class, 'lesson_id'); }
     public function scopePublished($q) { return $q->where('status', 'published'); }
 }

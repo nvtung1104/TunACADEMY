@@ -4,14 +4,14 @@
     <div class="flex gap-2">
       <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
         class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-        :class="activeTab === tab.value ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'">
+        :class="activeTab === tab.value ? 'bg-[#d63015] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-red-300'">
         {{ tab.label }}
       </button>
     </div>
 
     <!-- List -->
     <div v-if="loading" class="py-12 text-center text-gray-400">
-      <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+      <div class="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
       Đang tải...
     </div>
     <div v-else class="space-y-3">
@@ -28,7 +28,7 @@
           <!-- Icon -->
           <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
             :style="e.subject?.color ? `background: ${e.subject.color}20` : 'background: #eef2ff'">
-            <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
             </svg>
           </div>
@@ -71,11 +71,11 @@
           <!-- Action -->
           <div class="shrink-0">
             <button v-if="canTake(e)" @click="takeExam(e)"
-              class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+              class="px-4 py-2 rounded-xl bg-[#d63015] text-white text-sm font-medium hover:bg-[#c02a10] transition-colors">
               Làm bài
             </button>
             <RouterLink v-else-if="e.my_attempt?.score != null" :to="`/student/exams/${e.id}/result`"
-              class="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors inline-block">
+              class="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-red-300 hover:text-[#d63015] transition-colors inline-block">
               Xem kết quả
             </RouterLink>
           </div>
@@ -122,7 +122,7 @@ function examStatusLabel(e) {
 function examStatusClass(e) {
   if (e.my_attempt?.score != null) return 'bg-green-100 text-green-700'
   if (e.my_attempt) return 'bg-blue-100 text-blue-700'
-  if (e.status === 'published') return 'bg-indigo-100 text-indigo-700'
+  if (e.status === 'published') return 'bg-red-100 text-[#c02a10]'
   if (e.status === 'closed') return 'bg-gray-100 text-gray-500'
   return 'bg-amber-100 text-amber-700'
 }

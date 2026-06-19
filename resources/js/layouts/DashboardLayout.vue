@@ -143,7 +143,11 @@
       <!-- Content -->
       <main class="flex-1 overflow-y-auto p-5">
         <RouterView v-slot="{ Component }">
-          <Transition name="fade">
+          <Transition
+            enter-active-class="animate__animated animate__fadeIn animate__faster"
+            leave-active-class="animate__animated animate__fadeOut animate__faster"
+            mode="out-in"
+          >
             <component :is="Component" :key="route.path" />
           </Transition>
         </RouterView>
@@ -200,6 +204,7 @@ const adminNav = [
 
 const teacherNav = [
   { path: '/teacher/dashboard', label: 'Tổng quan', icon: icons.dashboard },
+  { path: '/teacher/timetable', label: 'Thời khóa biểu', icon: icons.calendar },
   { path: '/teacher/homeroom', label: 'Lớp chủ nhiệm', icon: icons.classroom },
   { path: '/teacher/lessons', label: 'Bài học', icon: icons.book },
   { path: '/teacher/exams', label: 'Bài kiểm tra', icon: icons.clipboard },
@@ -212,6 +217,7 @@ const teacherNav = [
 
 const studentNav = [
   { path: '/student/dashboard', label: 'Tổng quan', icon: icons.dashboard },
+  { path: '/student/timetable', label: 'Thời khóa biểu', icon: icons.calendar },
   { path: '/student/classes', label: 'Lớp học', icon: icons.classroom },
   { path: '/student/lessons', label: 'Bài học', icon: icons.book },
   { path: '/student/exams', label: 'Bài kiểm tra', icon: icons.clipboard },

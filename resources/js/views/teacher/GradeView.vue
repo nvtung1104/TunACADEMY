@@ -52,12 +52,13 @@
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Học sinh</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Điểm</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Xếp loại</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nhận xét AI</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Thời gian nộp</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           <tr v-if="results.length === 0">
-            <td colspan="5" class="py-10 text-center text-gray-400">Chưa có kết quả</td>
+            <td colspan="6" class="py-10 text-center text-gray-400">Chưa có kết quả</td>
           </tr>
           <tr v-for="(r, i) in results" :key="r.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-5 py-3 text-gray-400 text-xs font-mono">{{ i + 1 }}</td>
@@ -82,6 +83,9 @@
               <span class="px-2 py-1 rounded-full text-xs font-medium" :class="gradeClass(r.score)">
                 {{ gradeLabel(r.score) }}
               </span>
+            </td>
+            <td class="px-5 py-3 text-xs text-gray-500 max-w-xs truncate">
+              {{ r.ai_evaluation?.competency_comment || '—' }}
             </td>
             <td class="px-5 py-3 text-gray-400 text-xs">{{ formatDate(r.submitted_at) }}</td>
           </tr>

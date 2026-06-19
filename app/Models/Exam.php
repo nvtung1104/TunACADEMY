@@ -2,20 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\ExamType;
+use App\Enums\ShowResult;
+use App\Enums\Visibility;
 use Illuminate\Database\Eloquent\Model;
 
 class Exam extends Model
 {
-    // type values:
-    //   quiz_15, quiz_30, quiz_45  → bài kiểm tra có thời gian cố định (chống gian lận)
-    //   practice_exam              → đề thi ôn tập, học sinh vào tự do, không giới hạn thời gian mở
-
-    // visibility values:
-    //   public   → mọi học sinh đều thấy
-    //   private  → chỉ giáo viên thấy (nháp)
-    //   class    → lớp giáo viên đang dạy
-    //   selected → chọn lớp cụ thể / học sinh cụ thể (xem bảng content_shares)
-
     protected $fillable = [
         'classroom_id', 'subject_id', 'teacher_id', 'title', 'thumbnail', 'description',
         'type', 'duration_minutes', 'opened_at', 'closed_at',
@@ -30,6 +23,9 @@ class Exam extends Model
         'shuffle_options'    => 'boolean',
         'proctoring_enabled' => 'boolean',
         'allow_retake'       => 'boolean',
+        'type'               => ExamType::class,
+        'visibility'         => Visibility::class,
+        'show_result'        => ShowResult::class,
     ];
 
     public function classroom() { return $this->belongsTo(Classroom::class); }
@@ -41,7 +37,7 @@ class Exam extends Model
 
     public function isOpen(): bool
     {
-        if ($this->type === 'practice_exam') {
+        if ($this->type === ExamType::PracticeExam) {
             return $this->status === 'published';
         }
         return $this->status === 'published'
@@ -49,16 +45,14 @@ class Exam extends Model
             && now()->between($this->opened_at, $this->closed_at);
     }
 
-    public function isPracticeExam(): bool { return $this->type === 'practice_exam'; }
+    public function isPracticeExam(): bool { return $this->type === ExamType::PracticeExam; }
 
     public function getDurationAttribute(): int
     {
-        return match ($this->type) {
-            'quiz_15' => 15,
-            'quiz_30' => 30,
-            'quiz_45' => 45,
-            default   => $this->duration_minutes ?? 0,
-        };
+        if ($this->type instanceof ExamType && $this->type->isTimeLimited()) {
+            return $this->type->durationMinutes();
+        }
+        return $this->duration_minutes ?? 0;
     }
 
     public function scopePublished($q) { return $q->where('status', 'published'); }

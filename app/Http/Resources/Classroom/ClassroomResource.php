@@ -16,6 +16,9 @@ class ClassroomResource extends JsonResource
             'status'              => $this->status,
             'homeroom_teacher_id' => $this->homeroom_teacher_id,
             'students_count'   => $this->students_count ?? ($this->relationLoaded('students') ? $this->students->count() : null),
+            'lessons_count'    => $this->lessons_count ?? ($this->relationLoaded('lessons') ? $this->lessons->count() : null),
+            'assignments_count' => $this->assignments_count ?? ($this->relationLoaded('assignments') ? $this->assignments->count() : null),
+            'exams_count'      => $this->exams_count ?? ($this->relationLoaded('exams') ? $this->exams->count() : null),
             'grade'            => $this->whenLoaded('grade', fn() => [
                 'id'    => $this->grade->id,
                 'level' => $this->grade->level,

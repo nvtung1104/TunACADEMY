@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Loading -->
     <div v-if="loading" class="py-12 text-center text-gray-400">
-      <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+      <div class="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
       Đang tải kết quả...
     </div>
 
@@ -95,7 +95,7 @@ const summaryStats = computed(() => {
   const passed = scored.filter(a => a.score >= 5).length
   return [
     { label: 'Bài đã làm', value: total, color: 'text-gray-800' },
-    { label: 'Điểm trung bình', value: avg, color: 'text-indigo-600' },
+    { label: 'Điểm trung bình', value: avg, color: 'text-[#d63015]' },
     { label: 'Điểm cao nhất', value: best, color: 'text-green-600' },
     { label: 'Tỷ lệ đạt', value: total ? `${Math.round((passed / total) * 100)}%` : '—', color: 'text-emerald-600' },
   ]

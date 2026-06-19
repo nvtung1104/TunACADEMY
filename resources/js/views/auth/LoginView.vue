@@ -131,9 +131,19 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
           </button>
         </form>
+
+        <!-- Divider -->
+        <div class="relative my-6 text-center select-none">
+          <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-[#e8e0d8]" /></div>
+          <span class="relative bg-[#faf7f2] px-4 text-xs text-[#a09890] font-semibold uppercase">Hoặc đăng nhập bằng</span>
+        </div>
+
+        <!-- Google Login Button -->
+        <div class="w-full flex justify-center mb-6">
+          <div id="google-btn" class="w-full"></div>
+        </div>
 
         <div class="mt-6 text-center">
           <RouterLink to="/"
@@ -148,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore } from '@stores/auth'
 
@@ -170,6 +180,49 @@ async function handleLogin() {
     router.push(typeof redirect === 'string' ? redirect : auth.homeRoute())
   } catch (e) {
     error.value = e.response?.data?.message || 'Email hoặc mật khẩu không đúng'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  // Load Google Identity Services SDK
+  if (!document.getElementById('google-jssdk')) {
+    const script = document.createElement('script')
+    script.id = 'google-jssdk'
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = initGoogleSignIn
+    document.head.appendChild(script)
+  } else {
+    initGoogleSignIn()
+  }
+})
+
+function initGoogleSignIn() {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID'
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleLoginCallback,
+    })
+    window.google.accounts.id.renderButton(
+      document.getElementById('google-btn'),
+      { theme: 'outline', size: 'large', width: '100%', text: 'signin_with', shape: 'pill' }
+    )
+  }
+}
+
+async function handleGoogleLoginCallback(response) {
+  loading.value = true
+  error.value = ''
+  try {
+    await auth.googleLogin(response.credential)
+    const redirect = route.query.redirect
+    router.push(typeof redirect === 'string' ? redirect : auth.homeRoute())
+  } catch (e) {
+    error.value = e.response?.data?.message || 'Xác thực Google thất bại'
   } finally {
     loading.value = false
   }

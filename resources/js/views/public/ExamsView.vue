@@ -17,19 +17,19 @@
             v-model="filters.search"
             type="text"
             placeholder="Tìm kiếm tên đề thi..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] focus:border-transparent text-sm"
             @input="debouncedFetch"
           />
         </div>
 
         <select v-model="filters.grade_id" @change="fetchData"
-          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white min-w-36">
+          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm bg-white min-w-36">
           <option value="">Tất cả lớp</option>
           <option v-for="g in grades" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
 
         <select v-model="filters.subject_id" @change="fetchData"
-          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white min-w-40">
+          class="px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d63015] text-sm bg-white min-w-40">
           <option value="">Tất cả môn</option>
           <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
@@ -67,9 +67,10 @@
     <!-- Grid -->
     <div v-else>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <RouterLink v-for="exam in exams" :key="exam.id"
+        <RouterLink v-for="(exam, index) in exams" :key="exam.id"
           :to="'/exams/' + exam.id"
-          class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-100 transition-all overflow-hidden block no-underline text-inherit">
+          class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-100 transition-all overflow-hidden block no-underline text-inherit animate__animated animate__fadeInUp card-animate"
+          :style="{ animationDelay: `${index * 75}ms` }">
           <div class="h-1.5 w-full" :style="{ backgroundColor: exam.subject?.color || '#10b981' }" />
           <div class="p-6">
             <!-- Badges -->
@@ -139,7 +140,7 @@
           <button v-else @click="goPage(page)"
             class="w-10 h-10 rounded-xl border text-sm font-medium transition-colors"
             :class="page === meta.current_page
-              ? 'bg-indigo-600 border-indigo-600 text-white'
+              ? 'bg-[#d63015] border-[#d63015] text-white'
               : 'border-gray-200 text-gray-700 hover:bg-gray-50'">
             {{ page }}
           </button>
@@ -212,7 +213,7 @@ function examStatusClass(exam) {
   if (label === 'Đang mở') return 'bg-green-50 text-green-700'
   if (label === 'Sắp mở') return 'bg-blue-50 text-blue-700'
   if (label === 'Đã kết thúc') return 'bg-gray-100 text-gray-500'
-  return 'bg-indigo-50 text-indigo-700'
+  return 'bg-red-50 text-[#c02a10]'
 }
 
 function formatDate(date) {

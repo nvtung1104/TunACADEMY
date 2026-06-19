@@ -22,7 +22,7 @@ class ExamResource extends JsonResource
             'show_result'        => $this->show_result,
             'allow_retake'       => $this->allow_retake,
             'status'             => $this->status,
-            'question_count'     => $this->whenLoaded('questions', fn() => $this->questions->count()),
+            'question_count'     => $this->questions_count ?? ($this->relationLoaded('questions') ? $this->questions->count() : 0),
             'classroom'          => $this->whenLoaded('classroom', fn() => [
                 'id'   => $this->classroom->id,
                 'name' => $this->classroom->name,

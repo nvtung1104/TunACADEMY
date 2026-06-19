@@ -45,6 +45,22 @@ class LessonResource extends JsonResource
                 'image_path'  => $s->image_path,
                 'order_index' => $s->order_index,
             ])),
+            'questions'   => $this->whenLoaded('questions', fn() => $this->questions->map(fn($q) => [
+                'id'             => $q->id,
+                'type'           => $q->type,
+                'difficulty'     => $q->difficulty,
+                'content'        => $q->content,
+                'options'        => $q->options,
+                'correct_answer' => $q->correct_answer,
+                'explanation'    => $q->explanation,
+                'sub_questions'  => $q->sub_questions,
+                'audio_path'     => $q->audio_path,
+                'media_type'     => $q->media_type,
+                'media_path'     => $q->media_path,
+            ])),
+            'progress'    => $this->whenLoaded('studentProgress', fn() => [
+                'is_completed' => (bool)($this->studentProgress?->is_completed),
+            ]),
             'created_at'  => $this->created_at->toISOString(),
         ];
     }

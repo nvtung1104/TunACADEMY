@@ -67,7 +67,7 @@ const stats = ref([
   { label: 'Học sinh', icon: '🎒', value: 0, badge: 'Tổng', badgeClass: 'bg-blue-100 text-blue-600' },
   { label: 'Giáo viên', icon: '👨‍🏫', value: 0, badge: 'Tổng', badgeClass: 'bg-emerald-100 text-emerald-600' },
   { label: 'Lớp học', icon: '🏫', value: 0, badge: 'Đang hoạt động', badgeClass: 'bg-amber-100 text-amber-600' },
-  { label: 'Bài kiểm tra', icon: '📝', value: 0, badge: 'Tháng này', badgeClass: 'bg-violet-100 text-violet-600' },
+  { label: 'Bài kiểm tra', icon: '📝', value: 0, badge: 'Tháng này', badgeClass: 'bg-red-100 text-[#d63015]' },
 ])
 
 const quickActions = [

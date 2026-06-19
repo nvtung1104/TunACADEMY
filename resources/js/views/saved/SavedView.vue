@@ -46,7 +46,7 @@
     <!-- Grid -->
     <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <div v-for="item in filtered" :key="item.bookmark_id"
-        class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all overflow-hidden">
+        class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-100 transition-all overflow-hidden">
 
         <!-- Top accent -->
         <div class="h-1.5 w-full" :style="{ backgroundColor: item.subject?.color || typeColor(item.type) }"/>
@@ -60,7 +60,7 @@
                 {{ typeIcon(item.type) }} {{ typeLabel(item.type) }}
               </span>
               <span v-if="item.subject?.name" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold"
-                :style="{ backgroundColor: (item.subject.color || '#6366f1') + '18', color: item.subject.color || '#6366f1' }">
+                :style="{ backgroundColor: (item.subject.color || '#d63015') + '18', color: item.subject.color || '#d63015' }">
                 {{ item.subject.name }}
               </span>
             </div>
@@ -74,7 +74,7 @@
           </div>
 
           <!-- Title -->
-          <h3 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 group-hover:text-indigo-700 transition-colors">
+          <h3 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 group-hover:text-[#c02a10] transition-colors">
             {{ item.title }}
           </h3>
 
@@ -89,7 +89,7 @@
               <span v-if="item.classroom?.name"> · {{ item.classroom.name }}</span>
             </span>
             <RouterLink :to="detailPath(item)"
-              class="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+              class="flex items-center gap-1 text-xs font-semibold text-[#d63015] hover:text-[#9f1f0a] transition-colors">
               Xem
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -139,7 +139,7 @@ const filtered = computed(() => {
 })
 
 function typeColor(type) {
-  return { lesson: '#6366f1', exam: '#10b981', assignment: '#f59e0b' }[type] ?? '#6366f1'
+  return { lesson: '#d63015', exam: '#10b981', assignment: '#f59e0b' }[type] ?? '#d63015'
 }
 function typeLabel(type) {
   return { lesson: 'Bài học', exam: 'Đề thi', assignment: 'Bài tập' }[type] ?? type

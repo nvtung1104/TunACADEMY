@@ -166,7 +166,11 @@
 import { ref, reactive, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
+import { useToastStore }   from '@stores/toast'
+import { useConfirmStore } from '@stores/confirm'
 
+const toast        = useToastStore()
+const confirmStore = useConfirmStore()
 const subjects = ref([])
 const loading = ref(true)
 const modal = ref(false)
@@ -262,12 +266,12 @@ async function save() {
 }
 
 async function deleteSubject(s) {
-  if (!confirm(`Xóa môn học "${s.name}"?`)) return
+  if (!await confirmStore.ask(`Xóa môn học "${s.name}"?`)) return
   try {
     await api.delete(`/admin/subjects/${s.id}`)
     fetch()
   } catch (e) {
-    alert(e.response?.data?.message ?? 'Không thể xóa')
+    toast.error(e.response?.data?.message ?? 'Không thể xóa')
   }
 }
 

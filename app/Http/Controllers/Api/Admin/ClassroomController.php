@@ -18,7 +18,7 @@ class ClassroomController extends Controller
             ->when($request->grade_id, fn($q) => $q->where('grade_id', $request->grade_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->search, fn($q) => $q->where('name', 'like', '%' . $request->search . '%'))
-            ->latest()->paginate($request->input('per_page', 20));
+            ->latest()->paginate(min((int) $request->input('per_page', 20), 100));
 
         return ClassroomResource::collection($classrooms);
     }

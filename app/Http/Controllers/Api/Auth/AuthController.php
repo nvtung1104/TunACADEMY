@@ -119,4 +119,78 @@ class AuthController extends Controller
             ? $this->success(null, 'Mật khẩu đã được đặt lại thành công')
             : $this->error('Token không hợp lệ hoặc đã hết hạn', 400);
     }
+
+    public function googleLogin(Request $request)
+    {
+        $request->validate([
+            'credential' => 'required|string',
+        ]);
+
+        $credential = $request->credential;
+
+        try {
+            $client = new \GuzzleHttp\Client(['timeout' => 15]);
+            $response = $client->get('https://oauth2.googleapis.com/tokeninfo?id_token=' . $credential);
+            $payload = json_decode($response->getBody()->getContents(), true);
+
+            if (!isset($payload['email'])) {
+                return $this->error('Không thể xác thực với Google: Dữ liệu token không hợp lệ', 400);
+            }
+
+            $email = $payload['email'];
+            $name = $payload['name'] ?? explode('@', $email)[0];
+            $googleId = $payload['sub'] ?? null;
+            $avatarUrl = $payload['picture'] ?? null;
+
+            // Find user by email or google_id
+            $user = User::where('email', $email)
+                ->orWhere('google_id', $googleId)
+                ->first();
+
+            if (!$user) {
+                // Register a new user with student role
+                $user = User::create([
+                    'name'                 => $name,
+                    'email'                => $email,
+                    'google_id'            => $googleId,
+                    'password'             => Hash::make(\Illuminate\Support\Str::random(24)),
+                    'status'               => 'active',
+                    'must_change_password' => false,
+                ]);
+                $user->assignRole('student');
+
+                // Try to download avatar if provided
+                if ($avatarUrl) {
+                    try {
+                        $avatarData = file_get_contents($avatarUrl);
+                        if ($avatarData) {
+                            $filename = 'avatars/' . uniqid() . '.jpg';
+                            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $avatarData);
+                            $user->update(['avatar' => $filename]);
+                        }
+                    } catch (\Exception $e) {
+                        // ignore avatar errors
+                    }
+                }
+            } else {
+                if ($user->status !== 'active') {
+                    return $this->error('Tài khoản đã bị tạm khóa', 403);
+                }
+                
+                if (empty($user->google_id) && $googleId) {
+                    $user->update(['google_id' => $googleId]);
+                }
+            }
+
+            $user->update(['last_login_at' => now()]);
+
+            return $this->success([
+                'user'  => new \App\Http\Resources\User\UserResource($user->load('roles')),
+                'token' => $user->createToken('api')->plainTextToken,
+            ], 'Đăng nhập thành công');
+
+        } catch (\Exception $e) {
+            return $this->error('Xác thực Google thất bại: ' . $e->getMessage(), 400);
+        }
+    }
 }

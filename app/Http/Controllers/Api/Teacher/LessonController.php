@@ -32,7 +32,7 @@ class LessonController extends Controller
     {
         $this->gate($request, $lesson);
 
-        return $this->success(new LessonResource($lesson->load(['classroom', 'subject', 'materials', 'slides'])));
+        return $this->success(new LessonResource($lesson->load(['classroom', 'subject', 'materials', 'slides', 'questions'])));
     }
 
     public function update(StoreLessonRequest $request, Lesson $lesson)
@@ -64,7 +64,7 @@ class LessonController extends Controller
         $this->gate($request, $lesson);
 
         $request->validate([
-            'file'      => 'required|file|max:51200',
+            'file'      => 'required|file|max:51200|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,mp4,mp3,png,jpg,jpeg,webp,gif,zip',
             'file_name' => 'nullable|string|max:255',
         ]);
 

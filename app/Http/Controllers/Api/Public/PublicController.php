@@ -9,14 +9,18 @@ use App\Models\Exam;
 use App\Models\Grade;
 use App\Models\Lesson;
 use App\Models\Subject;
+use App\Services\AiSubmissionEvaluationService;
+use App\Services\ExamGradingService;
 use Illuminate\Http\Request;
 
 class PublicController extends Controller
 {
+    public function __construct(private readonly ExamGradingService $grader) {}
+
     public function grades()
     {
         $grades = Grade::orderBy('order_index')->get(['id', 'level', 'name']);
-        return response()->json(['data' => $grades]);
+        return $this->success($grades);
     }
 
     public function subjects()
@@ -24,7 +28,7 @@ class PublicController extends Controller
         $subjects = Subject::where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'color', 'icon']);
-        return response()->json(['data' => $subjects]);
+        return $this->success($subjects);
     }
 
     public function lessons(Request $request)
@@ -90,12 +94,13 @@ class PublicController extends Controller
                 'subject:id,name,code,color',
                 'teacher:id,name',
                 'materials',
+                'questions',
             ])
             ->findOrFail($id);
 
         $lesson->increment('view_count');
 
-        return response()->json(['data' => $lesson]);
+        return $this->success($lesson);
     }
 
     public function exam($id)
@@ -110,7 +115,7 @@ class PublicController extends Controller
             ])
             ->findOrFail($id);
 
-        return response()->json(['data' => $exam]);
+        return $this->success($exam);
     }
 
     public function assignment($id)
@@ -125,7 +130,7 @@ class PublicController extends Controller
             ])
             ->findOrFail($id);
 
-        return response()->json(['data' => $assignment]);
+        return $this->success($assignment);
     }
 
     // ── Public exam take & submit ────────────────────────────────────────────
@@ -138,7 +143,7 @@ class PublicController extends Controller
 
         $questions = $exam->shuffle_questions ? $exam->questions->shuffle() : $exam->questions;
 
-        return response()->json(['data' => [
+        return $this->success([
             'exam' => [
                 'id'               => $exam->id,
                 'title'            => $exam->title,
@@ -154,7 +159,7 @@ class PublicController extends Controller
                 'points'     => $q->points,
                 'audio_path' => $q->audio_path,
             ])->values(),
-        ]]);
+        ]);
     }
 
     public function examSubmit(Request $request, $id)
@@ -162,30 +167,38 @@ class PublicController extends Controller
         $exam = Exam::published()->with('questions')->findOrFail($id);
         $request->validate(['answers' => 'required|array']);
 
+        $total = $exam->questions->count();
+        $weightPerQuestion = $total > 0 ? (10.0 / $total) : 0.0;
+
         $earnedPoints = 0; $totalPoints = 0; $totalCorrect = 0; $detail = [];
         foreach ($request->answers as $questionId => $studentAnswer) {
             $question = $exam->questions->find($questionId);
             if (!$question) continue;
-            $isCorrect     = $this->gradeAnswer($studentAnswer, $question->correct_answer, $question->type);
-            $pointsEarned  = $isCorrect ? (float) $question->points : 0;
-            $totalPoints  += (float) $question->points;
+            $isCorrect     = $this->grader->gradeAnswer($studentAnswer, $question->correct_answer, $question->type);
+            $pointsEarned  = $isCorrect ? $weightPerQuestion : 0;
+            $totalPoints  += $weightPerQuestion;
             $earnedPoints += $pointsEarned;
             if ($isCorrect) $totalCorrect++;
             $detail[$questionId] = [
-                'is_correct'     => $isCorrect,
-                'correct_answer' => $question->correct_answer,
-                'points_earned'  => $pointsEarned,
+                'is_correct'    => $isCorrect,
+                'points_earned' => $pointsEarned,
             ];
         }
-        $total = $exam->questions->count();
-        $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 10, 2) : 0;
+        $score = $total > 0 ? round(($totalCorrect / $total) * 10, 2) : 0;
 
-        return response()->json(['data' => [
+        $questions = $exam->questions->map(fn($q) => [
+            'id'             => $q->id,
+            'correct_answer' => $q->correct_answer,
+            'explanation'    => $q->explanation,
+        ]);
+
+        return $this->success([
             'score'         => $score,
             'total_correct' => $totalCorrect,
             'total'         => $total,
             'detail'        => $detail,
-        ]]);
+            'questions'     => $questions,
+        ]);
     }
 
     // ── Public assignment take & submit ──────────────────────────────────────
@@ -196,7 +209,7 @@ class PublicController extends Controller
             ->with(['questions' => fn($q) => $q->orderBy('order_index'), 'subject:id,name,color'])
             ->findOrFail($id);
 
-        return response()->json(['data' => [
+        return $this->success([
             'assignment' => [
                 'id'          => $assignment->id,
                 'title'       => $assignment->title,
@@ -214,7 +227,7 @@ class PublicController extends Controller
                 'points'     => $q->points,
                 'audio_path' => $q->audio_path,
             ])->values(),
-        ]]);
+        ]);
     }
 
     public function assignmentSubmit(Request $request, $id)
@@ -223,50 +236,90 @@ class PublicController extends Controller
         $request->validate(['answers' => 'nullable|array']);
 
         if (!$request->answers || empty($request->answers)) {
-            return response()->json(['data' => ['score' => null, 'total_correct' => 0, 'total' => 0]]);
+            return $this->success(['score' => null, 'total_correct' => 0, 'total' => 0]);
         }
 
         $earnedPoints = 0; $totalPoints = 0; $totalCorrect = 0; $detail = [];
         foreach ($request->answers as $questionId => $studentAnswer) {
             $question = $assignment->questions->find($questionId);
             if (!$question) continue;
-            $isCorrect     = $this->gradeAnswer($studentAnswer, $question->correct_answer, $question->type);
+            $isCorrect     = $this->grader->gradeAnswer($studentAnswer, $question->correct_answer, $question->type);
             $pointsEarned  = $isCorrect ? (float) $question->points : 0;
             $totalPoints  += (float) $question->points;
             $earnedPoints += $pointsEarned;
             if ($isCorrect) $totalCorrect++;
             $detail[$questionId] = [
-                'is_correct'     => $isCorrect,
-                'correct_answer' => $question->correct_answer,
-                'points_earned'  => $pointsEarned,
+                'is_correct'    => $isCorrect,
+                'points_earned' => $pointsEarned,
             ];
         }
         $total = $assignment->questions->count();
         $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 10, 2) : null;
 
-        return response()->json(['data' => [
+        $questions = $assignment->questions->map(fn($q) => [
+            'id'             => $q->id,
+            'correct_answer' => $q->correct_answer,
+            'explanation'    => $q->explanation,
+        ]);
+
+        return $this->success([
             'score'         => $score,
             'total_correct' => $totalCorrect,
             'total'         => $total,
             'detail'        => $detail,
-        ]]);
+            'questions'     => $questions,
+        ]);
     }
 
-    private function gradeAnswer(mixed $student, mixed $correct, string $type): bool
+    public function aiReview(Request $request)
     {
-        if (in_array($type, ['essay', 'speaking', 'writing', 'short_answer', 'reading', 'listening'])) return false;
-        if (is_null($correct) || $correct === []) return false;
-        $c = array_map('strval', is_array($correct) ? $correct : [$correct]);
-        $s = is_array($student) ? array_map('strval', $student) : [strval($student)];
-        return match ($type) {
-            'multiple_select' => (function () use ($c, $s) { sort($c); sort($s); return $c === $s; })(),
-            'fill_blank'      => count($c) === count($s) && !array_filter(
-                                    array_map(fn($i, $ci) => mb_strtolower(trim($ci)) !== mb_strtolower(trim($s[$i] ?? '')),
-                                    array_keys($c), $c)),
-            'ordering'  => $c === $s,
-            'matching'  => json_encode($correct) === json_encode($student),
-            default     => trim($c[0] ?? '') === trim($s[0] ?? strval($student)),
-        };
+        $request->validate([
+            'type'   => 'required|in:exam,assignment',
+            'id'     => 'required|integer',
+            'answers' => 'required|array',
+            'detail' => 'nullable|array',
+        ]);
+
+        if ($request->type === 'exam') {
+            $model = Exam::published()->with(['questions', 'subject:id,name'])->find($request->id);
+        } else {
+            $model = Assignment::published()->with(['questions', 'subject:id,name'])->find($request->id);
+        }
+
+        if (!$model) {
+            return $this->error('Không tìm thấy', 404);
+        }
+
+        $answers = $request->answers;
+        $detail  = $request->detail ?? [];
+
+        $payload = [
+            'title'   => $model->title,
+            'subject' => $model->subject?->name ?? '',
+            'type'    => $request->type === 'exam' ? 'Đề thi' : 'Bài tập',
+            'questions' => $model->questions->map(function ($q) use ($answers, $detail) {
+                $qId = (string) $q->id;
+                return [
+                    'id'             => $qId,
+                    'content'        => strip_tags($q->content),
+                    'type'           => $q->type,
+                    'options'        => $q->options,
+                    'correct_answer' => $q->correct_answer,
+                    'student_answer' => $answers[$qId] ?? ($answers[$q->id] ?? null),
+                    'is_correct'     => $detail[$qId]['is_correct'] ?? ($detail[$q->id]['is_correct'] ?? null),
+                    'media_type'     => $q->media_type,
+                    'media_path'     => $q->media_path,
+                ];
+            })->values()->toArray(),
+        ];
+
+        $result = app(AiSubmissionEvaluationService::class)->reviewSubmission($payload);
+
+        if (!$result) {
+            return $this->error('Không thể kết nối AI lúc này. Thử lại sau.', 503);
+        }
+
+        return $this->success($result);
     }
 
     public function classrooms(Request $request)

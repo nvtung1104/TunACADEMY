@@ -15,28 +15,28 @@
 
     <template v-else>
       <!-- Class info -->
-      <div class="bg-gradient-to-r from-[#d63015] to-[#c02a10] rounded-2xl p-6 text-white shadow-lg">
+      <div class="welcome-banner rounded-2xl p-6 text-white shadow-sm">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-red-200 text-sm font-medium uppercase tracking-wider">Lớp chủ nhiệm</span>
+          <span class="text-white/70 text-sm font-medium uppercase tracking-wider">Lớp chủ nhiệm</span>
           <span class="text-xs px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm">
             {{ classroom.school_year?.name }}
           </span>
         </div>
-        <h1 class="text-3xl font-extrabold mb-1">{{ classroom.name }}</h1>
-        <p class="text-red-200">Khối {{ classroom.grade?.level }} · {{ classroom.grade?.name }}</p>
+        <h1 class="text-3xl font-medium mb-1">{{ classroom.name }}</h1>
+        <p class="text-white/70">Khối {{ classroom.grade?.level }} · {{ classroom.grade?.name }}</p>
 
         <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
           <div class="text-center">
             <p class="text-2xl font-bold">{{ students.length }}</p>
-            <p class="text-xs text-red-200 mt-0.5">Học sinh</p>
+            <p class="text-xs text-white/70 mt-0.5">Học sinh</p>
           </div>
           <div class="text-center">
             <p class="text-2xl font-bold">{{ classroom.max_students ?? '—' }}</p>
-            <p class="text-xs text-red-200 mt-0.5">Sĩ số tối đa</p>
+            <p class="text-xs text-white/70 mt-0.5">Sĩ số tối đa</p>
           </div>
           <div class="text-center">
             <p class="text-2xl font-bold">{{ subjectTeachers.length }}</p>
-            <p class="text-xs text-red-200 mt-0.5">Giáo viên bộ môn</p>
+            <p class="text-xs text-white/70 mt-0.5">Giáo viên bộ môn</p>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@
               <div v-for="st in subjectTeachers" :key="st.teacher?.id + '-' + st.subject?.id"
                 class="flex items-center gap-3 px-5 py-3">
                 <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                  :style="{ backgroundColor: (st.subject?.color || '#6366f1') + '20', color: st.subject?.color || '#6366f1' }">
+                  :style="{ backgroundColor: (st.subject?.color || '#d63015') + '20', color: st.subject?.color || '#d63015' }">
                   {{ st.subject?.name?.[0] }}
                 </div>
                 <div class="min-w-0">
@@ -141,3 +141,35 @@ onMounted(async () => {
   finally { loading.value = false }
 })
 </script>
+
+<style scoped>
+.welcome-banner {
+  background-image: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  right: 120px;
+  width: 80px;
+  height: 80px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+</style>

@@ -33,6 +33,6 @@ class SubjectController extends Controller
             })
             ->values();
 
-        return response()->json(['data' => $assignments]);
+        return $this->success($assignments);
     }
 }

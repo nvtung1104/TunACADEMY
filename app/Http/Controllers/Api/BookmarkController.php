@@ -47,7 +47,7 @@ class BookmarkController extends Controller
             ];
         })->filter()->values();
 
-        return response()->json(['data' => $bookmarks]);
+        return $this->success($bookmarks);
     }
 
     public function toggle(Request $request)

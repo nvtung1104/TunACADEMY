@@ -8,6 +8,7 @@ class LiveSession extends Model
         'room_code', 'scheduled_at', 'started_at', 'ended_at', 'duration_minutes', 'max_participants',
         'allow_screen_share', 'allow_student_mic', 'allow_student_cam',
         'chat_enabled', 'recording_enabled', 'recording_path', 'status', 'is_permanent',
+        'active_lesson_id', 'active_assignment_id', 'presentation_type',
     ];
     protected $casts = [
         'scheduled_at' => 'datetime', 'started_at' => 'datetime', 'ended_at' => 'datetime',
@@ -19,6 +20,8 @@ class LiveSession extends Model
     public function subject()      { return $this->belongsTo(Subject::class); }
     public function teacher()      { return $this->belongsTo(User::class, 'teacher_id'); }
     public function lesson()       { return $this->belongsTo(Lesson::class); }
+    public function activeLesson() { return $this->belongsTo(Lesson::class, 'active_lesson_id'); }
+    public function activeAssignment() { return $this->belongsTo(Assignment::class, 'active_assignment_id'); }
     public function participants() { return $this->hasMany(LiveParticipant::class, 'session_id'); }
     public function attendances()  { return $this->hasMany(LiveAttendance::class); }
     public function breakoutRooms(){ return $this->hasMany(BreakoutRoom::class); }

@@ -244,7 +244,11 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
 import UserDetailDrawer from './UserDetailDrawer.vue'
+import { useToastStore }   from '@stores/toast'
+import { useConfirmStore } from '@stores/confirm'
 
+const toast        = useToastStore()
+const confirmStore = useConfirmStore()
 const users = ref([])
 const loading = ref(true)
 const modal = ref(false)
@@ -401,13 +405,13 @@ async function toggleStatus(u) {
 }
 
 async function deleteUser(u) {
-  if (!confirm(`Xóa người dùng "${u.name}"?`)) return
+  if (!await confirmStore.ask(`Xóa người dùng "${u.name}"?`)) return
   await api.delete(`/admin/users/${u.id}`)
   fetch()
 }
 
 function roleLabel(r) { return { admin: 'Admin', teacher: 'Giáo viên', student: 'Học sinh' }[r] ?? r }
-function roleClass(r) { return { admin: 'bg-violet-100 text-violet-700', teacher: 'bg-emerald-100 text-emerald-700', student: 'bg-blue-100 text-blue-700' }[r] ?? 'bg-gray-100 text-gray-600' }
+function roleClass(r) { return { admin: 'bg-red-100 text-[#c02a10]', teacher: 'bg-emerald-100 text-emerald-700', student: 'bg-blue-100 text-blue-700' }[r] ?? 'bg-gray-100 text-gray-600' }
 
 onMounted(fetch)
 </script>

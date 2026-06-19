@@ -2,16 +2,16 @@
   <div class="space-y-6">
 
     <!-- Welcome banner -->
-    <div class="bg-gradient-to-r from-[#d63015] to-[#c02a10] rounded-2xl px-6 py-5 text-white shadow-lg flex items-center justify-between">
+    <div class="welcome-banner rounded-2xl px-6 py-5 text-white shadow-sm flex items-center justify-between">
       <div>
-        <p class="text-red-200 text-sm mb-0.5">{{ greeting }},</p>
-        <h1 class="text-2xl font-extrabold">{{ auth.user?.name ?? 'Giáo viên' }}</h1>
-        <p class="text-red-200 text-sm mt-1">{{ today }}</p>
+        <p class="text-white/70 text-sm mb-0.5">{{ greeting }},</p>
+        <h1 class="text-2xl font-medium">{{ auth.user?.name ?? 'Giáo viên' }}</h1>
+        <p class="text-white/70 text-sm mt-1">{{ today }}</p>
       </div>
       <div class="hidden sm:flex items-center gap-4">
         <div v-for="stat in stats" :key="stat.label" class="text-center px-4 border-l border-white/20 first:border-0">
           <p class="text-2xl font-bold">{{ loading ? '—' : stat.value }}</p>
-          <p class="text-xs text-red-200 mt-0.5">{{ stat.label }}</p>
+          <p class="text-xs text-white/70 mt-0.5">{{ stat.label }}</p>
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@
               class="rounded-xl border border-gray-100 overflow-hidden">
               <div class="flex items-center gap-3 px-3 py-2.5">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold"
-                  :style="{ backgroundColor: item.subject.color || '#6366f1' }">
+                  :style="{ backgroundColor: item.subject.color || '#d63015' }">
                   {{ item.subject.icon || item.subject.name?.[0] }}
                 </div>
                 <div class="min-w-0 flex-1">
@@ -177,12 +177,12 @@ const stats = ref([
   { label: 'Lớp chủ nhiệm', icon: iconClass, value: 0, iconBg: 'bg-blue-50', iconColor: 'text-blue-500' },
   { label: 'Học sinh', icon: iconUsers, value: 0, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
   { label: 'Bài học', icon: iconBook, value: 0, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
-  { label: 'Đề kiểm tra', icon: iconClip, value: 0, iconBg: 'bg-violet-50', iconColor: 'text-violet-500' },
+  { label: 'Đề kiểm tra', icon: iconClip, value: 0, iconBg: 'bg-red-50', iconColor: 'text-[#d63015]' },
 ])
 
 const quickActions = [
   { to: '/teacher/lessons', label: 'Tạo bài học mới', icon: iconBook, bg: 'bg-amber-50', color: 'text-amber-500' },
-  { to: '/teacher/exams', label: 'Tạo đề kiểm tra', icon: iconClip, bg: 'bg-violet-50', color: 'text-violet-500' },
+  { to: '/teacher/exams', label: 'Tạo đề kiểm tra', icon: iconClip, bg: 'bg-red-50', color: 'text-[#d63015]' },
   { to: '/teacher/assignments', label: 'Giao bài tập', icon: iconPencil, bg: 'bg-emerald-50', color: 'text-emerald-500' },
   { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: iconDatabase, bg: 'bg-red-50', color: 'text-[#d63015]' },
 ]
@@ -223,3 +223,35 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.welcome-banner {
+  background-image: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  right: 120px;
+  width: 80px;
+  height: 80px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+</style>

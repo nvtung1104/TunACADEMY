@@ -266,7 +266,7 @@ function formatDate(d) {
 }
 function genderLabel(g) { return { male: 'Nam', female: 'Nữ', other: 'Khác' }[g] ?? g }
 function roleLabel(r) { return { admin: 'Admin', teacher: 'Giáo viên', student: 'Học sinh' }[r] ?? r }
-function roleClass(r) { return { admin: 'bg-violet-100 text-violet-700', teacher: 'bg-emerald-100 text-emerald-700', student: 'bg-blue-100 text-blue-700' }[r] ?? 'bg-gray-100 text-gray-600' }
+function roleClass(r) { return { admin: 'bg-red-100 text-[#c02a10]', teacher: 'bg-emerald-100 text-emerald-700', student: 'bg-blue-100 text-blue-700' }[r] ?? 'bg-gray-100 text-gray-600' }
 function statusLabel(s) { return { active: 'Đang học', transferred: 'Chuyển trường', graduated: 'Tốt nghiệp' }[s] ?? s }
 function statusClass(s) { return { active: 'bg-green-100 text-green-700', transferred: 'bg-amber-100 text-amber-700', graduated: 'bg-blue-100 text-blue-700' }[s] ?? 'bg-gray-100 text-gray-600' }
 function fmt(v) { return v != null ? Number(v).toFixed(1) : '—' }

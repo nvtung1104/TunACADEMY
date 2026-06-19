@@ -53,7 +53,7 @@
             <td class="px-5 py-3">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
-                  :style="{ backgroundColor: (l.subject?.color || '#6366f1') + '20', color: l.subject?.color || '#6366f1' }">
+                  :style="{ backgroundColor: (l.subject?.color || '#d63015') + '20', color: l.subject?.color || '#d63015' }">
                   {{ l.subject?.name?.[0] }}
                 </div>
                 <div>

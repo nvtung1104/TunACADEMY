@@ -237,6 +237,7 @@
     <QuestionFormModal
       v-model="formModal"
       :edit-item="editQuestion"
+      :subject-code="assignment?.subject?.code"
       :saving="saving"
       :error="formError"
       @save="saveQuestion"
@@ -397,7 +398,7 @@ const qTypeLabel = (t) => ({
   ordering: 'Sắp xếp', matching: 'Ghép đôi', listening: 'Nghe hiểu', reading: 'Đọc hiểu',
 }[t] ?? t)
 const qTypeClass = (t) => ({
-  multiple_choice: 'bg-blue-100 text-blue-700', multiple_select: 'bg-indigo-100 text-indigo-700',
+  multiple_choice: 'bg-blue-100 text-blue-700', multiple_select: 'bg-red-100 text-[#c02a10]',
   true_false: 'bg-teal-100 text-teal-700', fill_blank: 'bg-orange-100 text-orange-700',
   short_answer: 'bg-yellow-100 text-yellow-700', essay: 'bg-gray-100 text-gray-600',
   ordering: 'bg-pink-100 text-pink-700', matching: 'bg-purple-100 text-purple-700',

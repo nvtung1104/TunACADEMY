@@ -12,9 +12,11 @@ class QuestionBank extends Model
         'teacher_id', 'subject_id', 'grade_id', 'lesson_id',
         'type', 'difficulty', 'chapter_tag',
         'content', 'media_type', 'media_path',
+        'audio_path',
         'options', 'correct_answer', 'explanation',
         'sub_questions', 'metadata',
         'default_points', 'is_public',
+        'used_in_exams_count', 'used_in_assignments_count', 'last_used_at',
     ];
 
     protected $casts = [
@@ -29,20 +31,17 @@ class QuestionBank extends Model
     public const AUTO_GRADED = [
         'multiple_choice', 'multiple_select', 'true_false',
         'fill_blank', 'ordering', 'matching', 'drag_drop',
-        'calculation', 'code_output',
+        'calculation', 'reading', 'listening',
     ];
 
     // Types that require teacher grading
     public const TEACHER_GRADED = [
         'essay', 'short_answer', 'speaking', 'writing',
-        'code_debug', 'code_runner',
     ];
 
     // Types that have sub-questions
     public const HAS_SUB_QUESTIONS = [
-        'reading', 'listening', 'multi_step',
-        'data_analysis', 'map_analysis', 'chart_analysis',
-        'case_study', 'experiment',
+        'reading', 'listening',
     ];
 
     public function teacher()    { return $this->belongsTo(User::class, 'teacher_id'); }
@@ -50,6 +49,10 @@ class QuestionBank extends Model
     public function grade()      { return $this->belongsTo(Grade::class); }
     public function lesson()     { return $this->belongsTo(Lesson::class); }
     public function examQuestions() { return $this->hasMany(ExamQuestion::class); }
+    public function assignmentQuestions() { return $this->hasMany(AssignmentQuestion::class); }
+    public function exams() { return $this->hasManyThrough(Exam::class, ExamQuestion::class, 'question_bank_id', 'id', 'id', 'exam_id'); }
+    public function assignments() { return $this->hasManyThrough(Assignment::class, AssignmentQuestion::class, 'question_bank_id', 'id', 'id', 'assignment_id'); }
+
 
     public function isAutoGraded(): bool  { return in_array($this->type, self::AUTO_GRADED); }
     public function hasSubQuestions(): bool { return in_array($this->type, self::HAS_SUB_QUESTIONS); }

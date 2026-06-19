@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen bg-[#1a1b2e] flex flex-col">
+  <div class="min-h-screen bg-[#f8f7f4] flex flex-col font-sans">
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200/60 bg-white shrink-0 shadow-sm">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl bg-[#d63015] flex items-center justify-center">
+        <div class="w-8 h-8 rounded-xl bg-[#7c3aed] flex items-center justify-center shadow-md shadow-[#7c3aed]/20">
           <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
         </div>
-        <span class="text-white font-bold text-lg">TunAcademy Live</span>
+        <span class="text-gray-900 font-extrabold text-lg tracking-tight">TunAcademy Live</span>
       </div>
-      <button @click="exitLobby" class="text-gray-400 hover:text-white text-sm flex items-center gap-1.5 transition-colors">
+      <button @click="exitLobby" class="text-gray-500 hover:text-gray-900 text-sm font-semibold flex items-center gap-1.5 transition-colors">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -19,17 +19,17 @@
     </div>
 
     <div class="flex-1 flex items-center justify-center p-6">
-      <div v-if="loading" class="text-gray-400 flex items-center gap-3">
-        <div class="w-5 h-5 rounded-full border-2 border-gray-600 border-t-white animate-spin"/>
+      <div v-if="loading" class="text-gray-500 flex items-center gap-3 font-medium">
+        <div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#7c3aed] animate-spin"/>
         Đang tải...
       </div>
 
-      <div v-else class="w-full max-w-4xl">
+      <div v-else class="w-full max-w-4xl animate__animated animate__fadeIn animate__faster">
         <div class="grid lg:grid-cols-[1fr_370px] gap-8 items-start">
 
           <!-- ── Camera column ── -->
-          <div>
-            <div class="relative aspect-video bg-[#0d0e1c] rounded-2xl overflow-hidden shadow-2xl">
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/50 shadow-sm space-y-5">
+            <div class="relative aspect-video bg-[#0d0e1c] rounded-2xl overflow-hidden shadow-inner">
 
               <!-- Video stream -->
               <video ref="localVideo" autoplay muted playsinline
@@ -39,14 +39,14 @@
               <!-- Avatar (when cam off or not granted) -->
               <div v-if="camPerm !== 'granted' || !camOn"
                 class="absolute inset-0 flex items-center justify-center">
-                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#d63015] to-orange-400 flex items-center justify-center text-3xl font-bold text-white select-none">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#7c3aed] to-indigo-400 flex items-center justify-center text-3xl font-bold text-white select-none shadow-lg shadow-[#7c3aed]/20">
                   {{ initials }}
                 </div>
               </div>
 
               <!-- Mic off badge -->
               <div v-if="micPerm === 'granted' && !micOn"
-                class="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/90 text-xs text-white font-medium">
+                class="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/90 text-xs text-white font-semibold shadow-md">
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1V9a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
@@ -56,18 +56,18 @@
 
               <!-- hint text when not yet enabled -->
               <div v-if="camPerm === 'prompt' || micPerm === 'prompt'"
-                class="absolute top-3 right-3 text-xs text-gray-500 bg-black/40 px-2 py-1 rounded-lg">
+                class="absolute top-3 right-3 text-xs text-gray-200 bg-black/60 px-2 py-1 rounded-lg">
                 Bấm nút bên dưới để bật
               </div>
 
               <!-- ── Bottom control bar ── -->
-              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-3">
+              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-3 z-10">
 
                 <!-- MIC button -->
                 <div class="flex flex-col items-center gap-1.5">
                   <button @click="micPerm === 'granted' ? toggleMic() : requestMicAccess()"
                     :disabled="requestingMic || micPerm === 'checking'"
-                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-sm disabled:opacity-50"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md disabled:opacity-50 shadow-md"
                     :class="micBtnClass"
                     :title="micBtnTitle">
                     <!-- spinner -->
@@ -90,7 +90,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
                     </svg>
                   </button>
-                  <span class="text-xs font-medium" :class="micPerm === 'granted' ? 'text-gray-300' : 'text-amber-400'">
+                  <span class="text-xs font-semibold drop-shadow-sm" :class="micPerm === 'granted' ? 'text-gray-200' : 'text-amber-300'">
                     {{ micBtnLabel }}
                   </span>
                 </div>
@@ -99,7 +99,7 @@
                 <div class="flex flex-col items-center gap-1.5">
                   <button @click="camPerm === 'granted' ? toggleCam() : requestCamAccess()"
                     :disabled="requestingCam || camPerm === 'checking'"
-                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-sm disabled:opacity-50"
+                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md disabled:opacity-50 shadow-md"
                     :class="camBtnClass"
                     :title="camBtnTitle">
                     <!-- spinner -->
@@ -121,7 +121,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"/>
                     </svg>
                   </button>
-                  <span class="text-xs font-medium" :class="camPerm === 'granted' ? 'text-gray-300' : 'text-amber-400'">
+                  <span class="text-xs font-semibold drop-shadow-sm" :class="camPerm === 'granted' ? 'text-gray-200' : 'text-amber-300'">
                     {{ camBtnLabel }}
                   </span>
                 </div>
@@ -129,54 +129,54 @@
             </div>
 
             <!-- ── Device selectors ── -->
-            <div class="mt-4 space-y-2.5">
+            <div class="space-y-3 pt-2">
               <!-- Camera selector -->
               <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                 </svg>
                 <template v-if="camPerm === 'granted'">
                   <select v-model="selectedCamera" @change="switchCamera"
-                    class="flex-1 px-3 py-2 rounded-xl text-white text-sm border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/30 bg-[#232440]">
-                    <option v-for="d in cameras" :key="d.deviceId" :value="d.deviceId" class="bg-gray-800">{{ d.label || 'Camera' }}</option>
+                    class="flex-1 px-3 py-2 rounded-xl text-gray-700 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/20 focus:border-[#7c3aed] bg-white transition-all">
+                    <option v-for="d in cameras" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Camera' }}</option>
                   </select>
                 </template>
                 <template v-else-if="camPerm === 'denied'">
-                  <p class="text-xs text-red-400 flex-1">Camera bị chặn — bấm 🔒 trên thanh địa chỉ → Cho phép Camera</p>
+                  <p class="text-xs text-red-600 font-medium flex-1">Camera bị chặn — bấm 🔒 trên thanh địa chỉ → Cho phép Camera</p>
                 </template>
                 <template v-else-if="camPerm === 'not-found'">
-                  <p class="text-xs text-amber-400 flex-1">Không tìm thấy camera</p>
+                  <p class="text-xs text-amber-600 font-medium flex-1">Không tìm thấy camera</p>
                 </template>
                 <template v-else-if="camPerm === 'in-use'">
-                  <p class="text-xs text-orange-400 flex-1">Camera đang bận — đóng ứng dụng khác rồi thử lại</p>
+                  <p class="text-xs text-orange-600 font-medium flex-1">Camera đang bận — đóng ứng dụng khác rồi thử lại</p>
                 </template>
                 <template v-else>
-                  <p class="text-xs text-gray-500 flex-1">Camera chưa được bật</p>
+                  <p class="text-xs text-gray-400 flex-1">Camera chưa được bật</p>
                 </template>
               </div>
 
               <!-- Mic selector -->
               <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
                 </svg>
                 <template v-if="micPerm === 'granted'">
                   <select v-model="selectedMic"
-                    class="flex-1 px-3 py-2 rounded-xl text-white text-sm border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/30 bg-[#232440]">
-                    <option v-for="d in microphones" :key="d.deviceId" :value="d.deviceId" class="bg-gray-800">{{ d.label || 'Microphone' }}</option>
+                    class="flex-1 px-3 py-2 rounded-xl text-gray-700 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/20 focus:border-[#7c3aed] bg-white transition-all">
+                    <option v-for="d in microphones" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Microphone' }}</option>
                   </select>
                 </template>
                 <template v-else-if="micPerm === 'denied'">
-                  <p class="text-xs text-red-400 flex-1">Mic bị chặn — bấm 🔒 trên thanh địa chỉ → Cho phép Microphone</p>
+                  <p class="text-xs text-red-600 font-medium flex-1">Mic bị chặn — bấm 🔒 trên thanh địa chỉ → Cho phép Microphone</p>
                 </template>
                 <template v-else-if="micPerm === 'not-found'">
-                  <p class="text-xs text-amber-400 flex-1">Không tìm thấy microphone</p>
+                  <p class="text-xs text-amber-600 font-medium flex-1">Không tìm thấy microphone</p>
                 </template>
                 <template v-else-if="micPerm === 'in-use'">
-                  <p class="text-xs text-orange-400 flex-1">Mic đang bận — đóng ứng dụng khác rồi thử lại</p>
+                  <p class="text-xs text-orange-600 font-medium flex-1">Mic đang bận — đóng ứng dụng khác rồi thử lại</p>
                 </template>
                 <template v-else>
-                  <p class="text-xs text-gray-500 flex-1">Microphone chưa được bật</p>
+                  <p class="text-xs text-gray-400 flex-1">Microphone chưa được bật</p>
                 </template>
               </div>
             </div>
@@ -185,36 +185,36 @@
           <!-- ── Right panel ── -->
           <div class="space-y-5">
             <!-- Room info -->
-            <div class="bg-white/5 rounded-2xl p-5 border border-white/10">
-              <div class="flex items-start gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-[#d63015]/20 flex items-center justify-center shrink-0">
-                  <svg class="w-5 h-5 text-[#d63015]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="bg-white rounded-3xl p-6 border border-gray-200/50 shadow-sm">
+              <div class="flex items-start gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-[#7c3aed]/10 flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5 text-[#7c3aed]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                   </svg>
                 </div>
                 <div class="min-w-0">
-                  <p class="font-bold text-white truncate">{{ session?.title }}</p>
-                  <p class="text-sm text-gray-400 mt-0.5">{{ session?.classroom?.name }}</p>
+                  <p class="font-extrabold text-[#0d0c22] text-base leading-snug truncate">{{ session?.title }}</p>
+                  <p class="text-sm text-gray-500 mt-0.5 font-medium">{{ session?.classroom?.name }}</p>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2.5 text-xs">
-                <div class="bg-white/5 rounded-xl p-2.5">
-                  <p class="text-gray-500 mb-0.5">{{ session?.classroom ? 'GVCN' : 'Giáo viên' }}</p>
-                  <p class="text-gray-200 font-medium truncate">
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                  <p class="text-gray-400 mb-0.5 font-medium">{{ session?.classroom ? 'GVCN' : 'Giáo viên' }}</p>
+                  <p class="text-gray-800 font-bold truncate">
                     {{ session?.classroom?.homeroom_teacher?.name ?? session?.teacher?.name ?? '—' }}
                   </p>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
-                  <p class="text-gray-500 mb-0.5">Mã phòng</p>
-                  <p class="text-gray-200 font-mono font-bold tracking-wider">{{ session?.room_code ?? '—' }}</p>
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                  <p class="text-gray-400 mb-0.5 font-medium">Mã phòng</p>
+                  <p class="text-gray-800 font-mono font-bold tracking-wider">{{ session?.room_code ?? '—' }}</p>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
-                  <p class="text-gray-500 mb-0.5">Trong phòng</p>
-                  <p class="text-gray-200 font-medium">{{ participantCount }} người</p>
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                  <p class="text-gray-400 mb-0.5 font-medium">Trong phòng</p>
+                  <p class="text-gray-800 font-bold">{{ participantCount }} người</p>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
-                  <p class="text-gray-500 mb-0.5">Trạng thái</p>
-                  <p class="font-semibold" :class="session?.status === 'live' ? 'text-green-400' : 'text-amber-400'">
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                  <p class="text-gray-400 mb-0.5 font-medium">Trạng thái</p>
+                  <p class="font-bold" :class="session?.status === 'live' ? 'text-green-600' : 'text-amber-600'">
                     {{ session?.status === 'live' ? '● Đang mở' : '○ Chưa mở' }}
                   </p>
                 </div>
@@ -222,28 +222,28 @@
             </div>
 
             <!-- User badge + device status -->
-            <div class="bg-white/5 rounded-xl p-3.5 border border-white/10">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#d63015] to-orange-400 flex items-center justify-center text-white font-bold shrink-0">
+            <div class="bg-white rounded-3xl p-5 border border-gray-200/50 shadow-sm">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#7c3aed] to-indigo-400 flex items-center justify-center text-white font-extrabold shrink-0 shadow-sm">
                   {{ initials }}
                 </div>
                 <div class="min-w-0">
-                  <p class="text-white font-medium text-sm truncate">{{ auth.user?.name }}</p>
-                  <p class="text-xs text-gray-400">{{ isAdmin ? 'Quản trị viên' : isHost ? 'Giáo viên · Chủ phòng' : 'Học sinh' }}</p>
+                  <p class="text-[#0d0c22] font-bold text-sm truncate">{{ auth.user?.name }}</p>
+                  <p class="text-xs text-gray-500 font-medium">{{ isAdmin ? 'Quản trị viên' : isHost ? 'Giáo viên · Chủ phòng' : 'Học sinh' }}</p>
                 </div>
               </div>
               <!-- Device status row -->
-              <div class="flex items-center gap-3 pt-3 border-t border-white/10">
-                <div class="flex items-center gap-1.5 text-xs"
-                  :class="camPerm === 'granted' ? 'text-green-400' : camPerm === 'denied' ? 'text-red-400' : 'text-gray-500'">
-                  <div class="w-1.5 h-1.5 rounded-full"
-                    :class="camPerm === 'granted' ? 'bg-green-400' : camPerm === 'denied' ? 'bg-red-400' : 'bg-gray-600'"/>
+              <div class="flex items-center gap-4 pt-3.5 border-t border-gray-100">
+                <div class="flex items-center gap-1.5 text-xs font-semibold"
+                  :class="camPerm === 'granted' ? 'text-green-600' : camPerm === 'denied' ? 'text-red-600' : 'text-gray-400'">
+                  <div class="w-2 h-2 rounded-full"
+                    :class="camPerm === 'granted' ? 'bg-green-500' : camPerm === 'denied' ? 'bg-red-500' : 'bg-gray-300'"/>
                   Camera
                 </div>
-                <div class="flex items-center gap-1.5 text-xs"
-                  :class="micPerm === 'granted' ? 'text-green-400' : micPerm === 'denied' ? 'text-red-400' : 'text-gray-500'">
-                  <div class="w-1.5 h-1.5 rounded-full"
-                    :class="micPerm === 'granted' ? 'bg-green-400' : micPerm === 'denied' ? 'bg-red-400' : 'bg-gray-600'"/>
+                <div class="flex items-center gap-1.5 text-xs font-semibold"
+                  :class="micPerm === 'granted' ? 'text-green-600' : micPerm === 'denied' ? 'text-red-600' : 'text-gray-400'">
+                  <div class="w-2 h-2 rounded-full"
+                    :class="micPerm === 'granted' ? 'bg-green-500' : micPerm === 'denied' ? 'bg-red-500' : 'bg-gray-300'"/>
                   Microphone
                 </div>
               </div>
@@ -251,20 +251,20 @@
 
             <!-- Waiting notice -->
             <div v-if="session?.status !== 'live' && !isHost"
-              class="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-xl px-4 py-3 flex items-start gap-2">
-              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              class="text-xs text-amber-700 bg-amber-50 border border-amber-200/60 rounded-2xl px-4 py-3.5 flex items-start gap-2.5 font-medium">
+              <svg class="w-4 h-4 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
               </svg>
               Phòng học chưa mở. Chờ giáo viên bắt đầu buổi học.
             </div>
 
-            <p v-if="joinError" class="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">{{ joinError }}</p>
+            <p v-if="joinError" class="text-xs text-red-700 bg-red-50 border border-red-200/60 rounded-2xl px-4 py-3.5 font-medium">{{ joinError }}</p>
 
             <!-- Join button -->
             <button @click="joinRoom"
               :disabled="(session?.status !== 'live' && !isHost) || joining"
-              class="w-full py-3.5 rounded-xl text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              :class="(session?.status === 'live' || isHost) ? 'bg-[#d63015] hover:bg-[#c02a10] text-white shadow-lg shadow-[#d63015]/20' : 'bg-gray-700 text-gray-400'">
+              class="w-full py-3.5 rounded-2xl text-base font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              :class="(session?.status === 'live' || isHost) ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-lg shadow-[#7c3aed]/20 active:scale-[0.98]' : 'bg-gray-200 text-gray-400'">
               <div v-if="joining" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"/>
               <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>

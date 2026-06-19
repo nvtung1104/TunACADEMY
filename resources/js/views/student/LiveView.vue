@@ -25,7 +25,7 @@
       <!-- Class rooms section -->
       <div v-if="classRooms.length">
         <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"/>
+          <span class="w-2 h-2 rounded-full bg-red-500 inline-block"/>
           Phòng học của lớp
         </h3>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

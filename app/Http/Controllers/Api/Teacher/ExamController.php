@@ -2,17 +2,21 @@
 namespace App\Http\Controllers\Api\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Teacher\StoreExamRequest;
-use App\Http\Requests\Teacher\StoreQuestionRequest;
+use App\Http\Requests\Teacher\{StoreExamRequest, StoreQuestionRequest};
 use App\Http\Resources\Exam\{ExamResource, ExamAttemptResource};
 use App\Models\{Classroom, Exam, ExamAttempt, ExamQuestion, User};
+use App\Services\QuestionService;
 use Illuminate\Http\Request;
 
 class ExamController extends Controller
 {
+    public function __construct(protected QuestionService $questionService)
+    {
+    }
     public function index(Request $request)
     {
         $exams = Exam::with(['classroom', 'subject'])
+            ->withCount('questions')
             ->where('teacher_id', $request->user()->id)
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->latest()->paginate(20);
@@ -56,13 +60,14 @@ class ExamController extends Controller
     public function storeQuestion(StoreQuestionRequest $request, Exam $exam)
     {
         $this->gate($request, $exam);
-        $question = $exam->questions()->create($request->validated());
+        $question = $this->questionService->createExamQuestion($exam, $request->validated());
         return $this->success($question, 'Thêm câu hỏi thành công', 201);
     }
 
     public function updateQuestion(StoreQuestionRequest $request, Exam $exam, ExamQuestion $question)
     {
         $this->gate($request, $exam);
+        abort_unless($question->exam_id === $exam->id, 404, 'Không tìm thấy câu hỏi');
         $question->update($request->validated());
         return $this->success($question->fresh(), 'Cập nhật câu hỏi thành công');
     }
@@ -70,6 +75,7 @@ class ExamController extends Controller
     public function destroyQuestion(Request $request, Exam $exam, ExamQuestion $question)
     {
         $this->gate($request, $exam);
+        abort_unless($question->exam_id === $exam->id, 404, 'Không tìm thấy câu hỏi');
         $question->delete();
         return $this->success(null, 'Xóa câu hỏi thành công');
     }
@@ -133,32 +139,94 @@ class ExamController extends Controller
             'target_student_ids.*'   => 'integer|exists:users,id',
         ]);
 
-        $exam->update(['visibility' => $data['visibility']]);
+        $teacherName = $request->user()->name;
 
-        if ($data['visibility'] === 'selected') {
-            $shares = [];
-
-            foreach ($data['target_classroom_ids'] ?? [] as $classroomId) {
-                $shares[] = [
-                    'target_type' => Classroom::class,
-                    'target_id'   => $classroomId,
-                ];
+        if ($data['visibility'] === 'class') {
+            if (empty($data['target_classroom_ids'])) {
+                return $this->error('Vui lòng chọn lớp học để chia sẻ', 422);
             }
-
-            foreach ($data['target_student_ids'] ?? [] as $userId) {
-                $shares[] = [
-                    'target_type' => User::class,
-                    'target_id'   => $userId,
-                ];
-            }
-
-            // Replace existing shares for this exam
+            $classroomId = $data['target_classroom_ids'][0];
+            $exam->update([
+                'classroom_id' => $classroomId,
+                'visibility' => 'class'
+            ]);
             $exam->shares()->delete();
-            foreach ($shares as $share) {
-                $exam->shares()->create($share);
+
+            $classroom = Classroom::find($classroomId);
+            if ($classroom) {
+                $students = $classroom->students;
+                foreach ($students as $student) {
+                    \App\Models\Notification::create([
+                        'user_id' => $student->id,
+                        'type' => 'exam_shared',
+                        'title' => "Đề thi mới cho lớp {$classroom->name}",
+                        'message' => "Giáo viên {$teacherName} đã giao đề thi \"{$exam->title}\" cho lớp {$classroom->name}.",
+                        'data' => [
+                            'exam_id' => $exam->id,
+                            'type' => 'exam_shared',
+                            'title' => $exam->title,
+                            'teacher_name' => $teacherName,
+                        ]
+                    ]);
+                }
+            }
+        } elseif ($data['visibility'] === 'public') {
+            $exam->update([
+                'classroom_id' => null,
+                'visibility' => 'public'
+            ]);
+            $exam->shares()->delete();
+
+            $teacherId = $request->user()->id;
+            $classroomIds = Classroom::where('homeroom_teacher_id', $teacherId)->pluck('id')
+                ->merge(\App\Models\ClassroomSubjectTeacher::where('teacher_id', $teacherId)->pluck('classroom_id'))
+                ->unique();
+
+            $studentIds = \DB::table('classroom_students')
+                ->whereIn('classroom_id', $classroomIds)
+                ->where('status', 'active')
+                ->pluck('student_id')
+                ->unique();
+
+            foreach ($studentIds as $studentId) {
+                \App\Models\Notification::create([
+                    'user_id' => $studentId,
+                    'type' => 'exam_shared',
+                    'title' => "Đề thi mới công khai",
+                    'message' => "Giáo viên {$teacherName} đã chia sẻ công khai đề thi \"{$exam->title}\". Hãy thử sức ngay!",
+                    'data' => [
+                        'exam_id' => $exam->id,
+                        'type' => 'exam_shared',
+                        'title' => $exam->title,
+                        'teacher_name' => $teacherName,
+                    ]
+                ]);
             }
         } else {
+            $exam->update([
+                'classroom_id' => null,
+                'visibility' => $data['visibility']
+            ]);
             $exam->shares()->delete();
+
+            if ($data['visibility'] === 'selected') {
+                $shares = [];
+                foreach ($data['target_classroom_ids'] ?? [] as $classroomId) {
+                    $shares[] = [
+                        'target_type' => Classroom::class,
+                        'target_id'   => $classroomId,
+                    ];
+                }
+                foreach ($data['target_student_ids'] ?? [] as $userId) {
+                    $shares[] = [
+                        'target_type' => User::class,
+                        'target_id'   => $userId,
+                    ];
+                }
+                foreach ($shares as $share) {
+                    $exam->shares()->create($share);
+                }
+            }
         }
 
         return $this->success(null, 'Cập nhật chia sẻ thành công');
@@ -172,6 +240,46 @@ class ExamController extends Controller
         $path = $request->file('thumbnail')->store('thumbnails/exams', 'public');
         $exam->update(['thumbnail' => $path]);
         return $this->success(['thumbnail_url' => asset("storage/{$path}")], 'Cập nhật ảnh bìa thành công');
+    }
+
+    public function reorderQuestions(Request $request, Exam $exam)
+    {
+        $this->gate($request, $exam);
+        $request->validate([
+            'question_ids'   => 'required|array',
+            'question_ids.*' => 'integer|exists:exam_questions,id',
+        ]);
+
+        $this->questionService->reorderExamQuestions($exam, $request->question_ids);
+        return $this->success(null, 'Đã cập nhật thứ tự câu hỏi');
+    }
+
+    public function duplicateQuestion(Request $request, Exam $exam, ExamQuestion $question)
+    {
+        $this->gate($request, $exam);
+        abort_unless($question->exam_id === $exam->id, 404, 'Không tìm thấy câu hỏi');
+
+        $duplicated = $this->questionService->duplicateExamQuestion($question);
+        return $this->success($duplicated, 'Đã sao chép câu hỏi', 201);
+    }
+
+    public function saveQuestionToBank(Request $request, Exam $exam, ExamQuestion $question)
+    {
+        $this->gate($request, $exam);
+        abort_unless($question->exam_id === $exam->id, 404, 'Không tìm thấy câu hỏi');
+
+        $request->validate(['is_public' => 'nullable|boolean']);
+
+        $bankQuestion = $this->questionService->saveExamQuestionToBank(
+            $question,
+            $request->user()->id,
+            $request->boolean('is_public', false)
+        );
+
+        // Link the exam question to the bank question
+        $question->update(['question_bank_id' => $bankQuestion->id]);
+
+        return $this->success($bankQuestion, 'Đã lưu câu hỏi vào ngân hàng', 201);
     }
 
     private function gate(Request $request, Exam $exam): void

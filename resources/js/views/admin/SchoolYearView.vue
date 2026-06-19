@@ -79,7 +79,11 @@
 import { ref, reactive, onMounted } from 'vue'
 import api from '@api/axios'
 import AppModal from '@components/common/AppModal.vue'
+import { useToastStore }   from '@stores/toast'
+import { useConfirmStore } from '@stores/confirm'
 
+const toast        = useToastStore()
+const confirmStore = useConfirmStore()
 const items = ref([])
 const loading = ref(true)
 const modal = ref(false)
@@ -109,9 +113,9 @@ async function save() {
 }
 
 async function deleteItem(sy) {
-  if (!confirm(`Xóa năm học "${sy.name}"?`)) return
+  if (!await confirmStore.ask(`Xóa năm học "${sy.name}"?`)) return
   try { await api.delete(`/admin/school-years/${sy.id}`); fetch() }
-  catch (e) { alert(e.response?.data?.message ?? 'Không thể xóa') }
+  catch (e) { toast.error(e.response?.data?.message ?? 'Không thể xóa') }
 }
 
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('vi-VN') : '' }

@@ -72,10 +72,13 @@ const router = createRouter({
       children: [
         { path: '', redirect: '/teacher/dashboard' },
         { path: 'dashboard', component: () => import('@/views/teacher/DashboardView.vue') },
+        { path: 'timetable', component: () => import('@/views/teacher/TimetableView.vue') },
         { path: 'homeroom', component: () => import('@/views/teacher/HomeroomView.vue') },
         { path: 'lessons', component: () => import('@/views/teacher/LessonManageView.vue') },
         { path: 'exams', component: () => import('@/views/teacher/ExamManageView.vue') },
+        { path: 'exams/:id', component: () => import('@/views/teacher/ExamDetailView.vue') },
         { path: 'assignments', component: () => import('@/views/teacher/AssignmentManageView.vue') },
+        { path: 'assignments/:id', component: () => import('@/views/teacher/AssignmentDetailView.vue') },
         { path: 'grades', component: () => import('@/views/teacher/GradeView.vue') },
         { path: 'question-bank', component: () => import('@/views/teacher/QuestionBankView.vue') },
         { path: 'question-bank/create', component: () => import('@/views/teacher/QuestionCreateView.vue') },
@@ -92,6 +95,7 @@ const router = createRouter({
       children: [
         { path: '', redirect: '/student/dashboard' },
         { path: 'dashboard', component: () => import('@/views/student/DashboardView.vue') },
+        { path: 'timetable', component: () => import('@/views/student/TimetableView.vue') },
         { path: 'classes', component: () => import('@/views/student/ClassView.vue') },
         { path: 'lessons', component: () => import('@/views/student/LessonsView.vue') },
         { path: 'lessons/subjects', component: () => import('@/views/student/LessonsBySubjectView.vue') },
@@ -137,6 +141,28 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+// Recover from ChunkLoadErrors / failed dynamic imports after new builds
+router.onError((error, to) => {
+  const msg = error?.message || ''
+  const isChunkError = 
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Failed to fetch') ||
+    /loading chunk/i.test(msg)
+  
+  if (isChunkError) {
+    const lastReload = sessionStorage.getItem('last_chunk_reload')
+    const now = Date.now()
+    
+    // Prevent infinite reload loop if user is offline or file is completely missing
+    if (!lastReload || now - parseInt(lastReload) > 10000) {
+      sessionStorage.setItem('last_chunk_reload', now.toString())
+      window.location.href = to.fullPath
+    }
+  }
 })
 
 export default router
