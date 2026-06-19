@@ -13,7 +13,7 @@ class LiveParticipantSeeder extends Seeder
     {
         $session = LiveSession::first();
         $teacher = User::where('email', 'teacher1@tunacademy.com')->first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         LiveParticipant::updateOrCreate(
             [

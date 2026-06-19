@@ -1,0 +1,15 @@
+{
+  "name": "guides",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev .",
+    "docs:build": "vitepress build .",
+    "docs:build:watch": "chokidar \"**/*.{md,vue,ts,js,mjs,cjs}\" \".vitepress/**\" -i node_modules -c \"npm run docs:build\"",
+    "docs:preview": "vitepress preview ."
+  },
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "vitepress": "^1.6.3"
+  }
+}

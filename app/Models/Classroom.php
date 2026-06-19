@@ -3,7 +3,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Classroom extends Model
 {
-    protected $fillable = ['name', 'grade_id', 'school_year_id', 'homeroom_teacher_id', 'max_students', 'status'];
+    protected $fillable = ['name', 'grade_id', 'school_year_id', 'homeroom_teacher_id', 'max_students', 'status', 'cover_image', 'room_code'];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($classroom) {
+            if (empty($classroom->room_code)) {
+                do {
+                    $code = strtoupper(substr(md5(uniqid($classroom->name ?? '', true)), 0, 8));
+                } while (static::where('room_code', $code)->exists());
+                $classroom->room_code = $code;
+            }
+        });
+    }
     public function grade()           { return $this->belongsTo(Grade::class); }
     public function schoolYear()      { return $this->belongsTo(SchoolYear::class); }
     public function homeroomTeacher() { return $this->belongsTo(User::class, 'homeroom_teacher_id'); }

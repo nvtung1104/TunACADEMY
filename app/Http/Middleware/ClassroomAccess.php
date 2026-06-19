@@ -3,16 +3,13 @@
 namespace App\Http\Middleware;
 
 use App\Models\Classroom;
-use App\Models\ClassroomStudent;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class ClassroomAccess
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $classroomId = $request->route('classroom_id') ?? $request->route('classroom');
@@ -29,14 +26,16 @@ class ClassroomAccess
 
         $user = $request->user();
 
-        // Check if user is teacher of this classroom
-        $isTeacher = $classroom->teachers()->where('user_id', $user->id)->exists();
+        $isTeacher = DB::table('classroom_subject_teachers')
+            ->where('classroom_id', $classroomId)
+            ->where('teacher_id', $user->id)
+            ->exists();
 
-        // Check if user is student in this classroom
-        $isStudent = ClassroomStudent::where([
-            ['classroom_id', '=', $classroomId],
-            ['user_id', '=', $user->id],
-        ])->exists();
+        $isStudent = $isTeacher ? false : DB::table('classroom_students')
+            ->where('classroom_id', $classroomId)
+            ->where('student_id', $user->id)
+            ->where('status', 'active')
+            ->exists();
 
         if (!$isTeacher && !$isStudent) {
             return response()->json(['message' => 'You do not have access to this classroom.'], 403);

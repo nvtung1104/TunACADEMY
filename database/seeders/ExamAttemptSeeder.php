@@ -12,7 +12,7 @@ class ExamAttemptSeeder extends Seeder
     public function run(): void
     {
         $exam = Exam::first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $index => $student) {
             ExamAttempt::updateOrCreate(

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -16,18 +17,19 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
         'avatar',
         'phone',
         'date_of_birth',
         'gender',
+        'frame',
         'address',
         'qualification',
         'parent_name',
         'parent_phone',
+        'parent_email',
         'parent_address',
-        'zalo_user_id',
-        'zalo_notification_enabled',
         'status',
         'must_change_password',
         'last_login_at',
@@ -40,7 +42,6 @@ class User extends Authenticatable
 
     protected $casts = [
         'date_of_birth' => 'date',
-        'zalo_notification_enabled' => 'boolean',
         'must_change_password' => 'boolean',
         'last_login_at' => 'datetime',
         'password' => 'hashed',
@@ -49,6 +50,13 @@ class User extends Authenticatable
     public function homeroomClassrooms(): HasMany
     {
         return $this->hasMany(Classroom::class, 'homeroom_teacher_id');
+    }
+
+    public function classrooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Classroom::class, 'classroom_students', 'student_id', 'classroom_id')
+            ->withPivot('joined_at', 'left_at', 'status')
+            ->wherePivot('status', 'active');
     }
 
     public function classroomStudents(): HasMany
@@ -190,6 +198,8 @@ class User extends Authenticatable
     {
         return $this->avatar ? asset("storage/{$this->avatar}") : null;
     }
+
+    public function bookmarks(): HasMany { return $this->hasMany(Bookmark::class); }
 
     public function isAdmin(): bool    { return $this->hasRole('admin'); }
     public function isTeacher(): bool  { return $this->hasRole('teacher'); }

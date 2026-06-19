@@ -12,7 +12,7 @@ class BreakoutRoomMemberSeeder extends Seeder
     public function run(): void
     {
         $rooms = BreakoutRoom::orderBy('room_index')->get()->values();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get()->values();
+        $students = User::role('student')->get()->values();
 
         foreach ($students as $index => $student) {
             $room = $rooms[$index % max($rooms->count(), 1)] ?? null;

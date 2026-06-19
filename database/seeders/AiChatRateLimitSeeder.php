@@ -10,7 +10,7 @@ class AiChatRateLimitSeeder extends Seeder
 {
     public function run(): void
     {
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $student) {
             AiChatRateLimit::updateOrCreate(

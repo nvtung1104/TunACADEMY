@@ -16,7 +16,7 @@ class ScoreSeeder extends Seeder
         $classroom = Classroom::where('name', '10A1')->first();
         $schoolYear = SchoolYear::where('status', 'active')->first();
         $subject = Subject::where('code', 'MATH')->first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $index => $student) {
             $final = 7.5 + ($index % 3) * 0.5;

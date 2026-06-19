@@ -3,6 +3,7 @@ import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
+import fs from "fs";
 
 export default defineConfig({
     plugins: [
@@ -39,9 +40,14 @@ export default defineConfig({
     server: {
         host: "0.0.0.0",
         port: 5175,
+        https: {
+            key:  fs.readFileSync("C:/laragon/etc/ssl/laragon.key"),
+            cert: fs.readFileSync("C:/laragon/etc/ssl/laragon.crt"),
+        },
         hmr: {
             host: "tunacademy.test",
             port: 5175,
+            protocol: "wss",
         },
         watch: {
             ignored: [
@@ -56,23 +62,21 @@ export default defineConfig({
         outDir: "public/build",
         emptyOutDir: true,
         target: "esnext",
-        minify: "terser",
-        terserOptions: {
-            compress: {
-                drop_console: true,
-            },
-        },
+        minify: true,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vue: ["vue"],
-                    laravel: ["@inertiajs/vue3", "axios"],
+                manualChunks(id) {
+                    if (id.includes('node_modules/firebase')) return 'firebase'
+                    if (id.includes('node_modules/@tiptap') || id.includes('node_modules/prosemirror')) return 'editor'
+                    if (id.includes('node_modules/chart.js') || id.includes('node_modules/vue-chartjs')) return 'charts'
+                    if (id.includes('node_modules/vue') || id.includes('node_modules/@vue') || id.includes('node_modules/pinia')) return 'vue'
+                    if (id.includes('node_modules/axios') || id.includes('node_modules/lodash')) return 'vendor'
                 },
             },
         },
         sourcemap: false,
     },
     optimizeDeps: {
-        include: ["vue"],
+        include: ["vue", "axios", "pinia", "@vueuse/core"],
     },
 });

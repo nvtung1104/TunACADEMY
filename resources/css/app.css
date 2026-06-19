@@ -1,1 +1,384 @@
- 
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Chakra Petch', 'Inter', system-ui, sans-serif;
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-500: #7c3aed;
+  --color-primary-600: #6d28d9;
+  --color-primary-700: #5b21b6;
+  --color-primary-950: #2e1065;
+}
+
+/* Base Styles & Resets */
+body {
+  font-family: var(--font-sans);
+  background-color: #f8f7f4 !important;
+  color: #1a1a1a !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+* { box-sizing: border-box; }
+
+/* Font weight constraints: no heavy bold/700, limit to 500 */
+h1, h2, h3, h4, h5, h6,
+.font-bold, .font-extrabold, .font-semibold {
+  font-weight: 500 !important;
+}
+
+/* Accent Color definition */
+:root {
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-light: #f5f3ff;
+}
+
+/* Backgrounds & Surface styling */
+.bg-gray-50, .bg-slate-50, .bg-gray-100, .bg-slate-100, .bg-slate-55\/40 {
+  background-color: #f8f7f4 !important;
+}
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+/* Text Colors */
+.text-slate-800, .text-slate-900, .text-gray-800, .text-gray-900 {
+  color: #1a1a1a !important;
+}
+.text-slate-500, .text-gray-500, .text-slate-450, .text-slate-400, .text-gray-400, .text-slate-600, .text-gray-600 {
+  color: #6b7280 !important;
+}
+
+/* Borders and Dividers: 0.5px light border */
+.border, .border-t, .border-b, .border-l, .border-r,
+.border-2, .border-t-2, .border-b-2, .border-l-2, .border-r-2,
+.border-slate-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-150 {
+  border-color: #e5e7eb !important;
+}
+
+.border, .border-2 {
+  border-width: 0.5px !important;
+}
+.border-t, .border-t-2 {
+  border-top-width: 0.5px !important;
+  border-bottom-width: 0px !important;
+  border-left-width: 0px !important;
+  border-right-width: 0px !important;
+}
+.border-b, .border-b-2 {
+  border-bottom-width: 0.5px !important;
+  border-top-width: 0px !important;
+  border-left-width: 0px !important;
+  border-right-width: 0px !important;
+}
+.border-l, .border-l-2 {
+  border-left-width: 0.5px !important;
+  border-top-width: 0px !important;
+  border-bottom-width: 0px !important;
+  border-right-width: 0px !important;
+}
+.border-r, .border-r-2 {
+  border-right-width: 0.5px !important;
+  border-top-width: 0px !important;
+  border-bottom-width: 0px !important;
+  border-left-width: 0px !important;
+}
+* {
+  --tw-border-opacity: 1 !important;
+}
+
+/* Active / Focus Borders */
+.border-black, .border-gray-900, .border-slate-900 {
+  border-color: #1a1a1a !important;
+  border-width: 1px !important;
+}
+.border-\[\#d63015\], .focus\:border-\[\#d63015\]:focus, .focus\:ring-\[\#d63015\]:focus {
+  border-color: var(--color-accent) !important;
+}
+.focus\:border-blue-500:focus, .focus\:border-indigo-500:focus {
+  border-color: var(--color-accent) !important;
+}
+
+/* Radii overrides: 8px for buttons/inputs, 12px for cards */
+button, input, select, textarea,
+.rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl {
+  border-radius: 8px !important;
+}
+.rounded-3xl, [class*="card"] {
+  border-radius: 12px !important;
+}
+.rounded-full {
+  border-radius: 9999px !important;
+}
+
+/* Shadow and Gradients constraints: no heavy shadow, no background gradient */
+.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+.bg-gradient-to-r, .bg-gradient-to-l, .bg-gradient-to-t, .bg-gradient-to-b {
+  background-image: none !important;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f8f7f4; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* Chakra Petch Font Helper Classes with weight overrides per spec */
+.chakra-petch-light {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+.chakra-petch-regular {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+.chakra-petch-medium {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+.chakra-petch-semibold {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+.chakra-petch-bold {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+.chakra-petch-light-italic {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+.chakra-petch-regular-italic {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+.chakra-petch-medium-italic {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+.chakra-petch-semibold-italic {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+.chakra-petch-bold-italic {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Global Theme Adapters for old red (#d63015) arbitrary classes */
+/* Primary CTA button mappings (old red -> brand purple accent color background with white text) */
+.bg-\[\#d63015\] {
+  background-color: var(--color-accent) !important;
+  color: #ffffff !important;
+}
+.hover\:bg-\[\#c02a10\]:hover, .hover\:bg-\[\#d63015\]:hover {
+  background-color: var(--color-accent-hover) !important;
+  color: #ffffff !important;
+}
+
+/* Secondary CTA buttons (old red/10 or similar -> accent light bg, accent text) */
+.bg-\[\#d63015\]\/10 {
+  background-color: rgba(124, 58, 237, 0.1) !important;
+  color: var(--color-accent) !important;
+}
+.hover\:bg-\[\#d63015\]\/20:hover {
+  background-color: rgba(124, 58, 237, 0.2) !important;
+}
+
+/* Text and highlights that were red should use the accent color */
+.text-\[\#d63015\], .text-\[\#c02a10\] {
+  color: var(--color-accent) !important;
+}
+.hover\:text-\[\#c02a10\]:hover, .hover\:text-\[\#d63015\]:hover {
+  color: var(--color-accent-hover) !important;
+}
+
+/* Input checkbox / radio focus */
+.focus\:ring-\[\#d63015\]:focus {
+  --tw-ring-color: var(--color-accent) !important;
+}
+.focus\:border-\[\#d63015\]:focus {
+  border-color: var(--color-accent) !important;
+}
+.accent-\[\#d63015\] {
+  accent-color: var(--color-accent) !important;
+}
+
+.bg-\[\#d63015\]\/5 {
+  background-color: rgba(124, 58, 237, 0.05) !important;
+}
+.bg-\[\#d63015\]\/20 {
+  background-color: rgba(124, 58, 237, 0.2) !important;
+}
+.focus\:ring-\[\#d63015\]\/10:focus {
+  --tw-ring-color: rgba(124, 58, 237, 0.1) !important;
+}
+.focus\:ring-\[\#d63015\]\/20:focus {
+  --tw-ring-color: rgba(124, 58, 237, 0.2) !important;
+}
+
+/* Adapt standard rose/red classes to accent colors */
+.bg-rose-50, .bg-red-50 {
+  background-color: var(--color-accent-light) !important;
+}
+.bg-red-50\/50, .bg-red-50\/5 {
+  background-color: rgba(124, 58, 237, 0.05) !important;
+}
+.text-rose-500, .text-rose-600, .text-red-500, .text-red-600, .text-red-700 {
+  color: var(--color-accent) !important;
+}
+.border-red-500\/10 {
+  border-color: rgba(124, 58, 237, 0.1) !important;
+}
+.ring-red-50\/50 {
+  --tw-ring-color: rgba(124, 58, 237, 0.2) !important;
+}
+.bg-green-50, .bg-green-100 {
+  background-color: var(--color-accent-light) !important;
+  color: var(--color-accent) !important;
+  border-color: rgba(124, 58, 237, 0.2) !important;
+}
+.text-green-700, .text-green-600 {
+  color: var(--color-accent) !important;
+}
+.bg-green-500, .bg-green-600, .bg-blue-500, .bg-blue-600, .bg-red-500, .bg-red-600 {
+  background-color: var(--color-accent) !important;
+}
+
+/* Layout Overrides: Dashboard Sidebar (pristine white theme) */
+aside.bg-\[\#0d0c22\] {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border-right: 0.5px solid #e5e7eb !important;
+}
+aside.bg-\[\#0d0c22\] .border-white\/10 {
+  border-color: #e5e7eb !important;
+}
+aside.bg-\[\#0d0c22\] .text-white, 
+aside.bg-\[\#0d0c22\] .font-bold.text-base {
+  color: #1a1a1a !important;
+}
+aside.bg-\[\#0d0c22\] .text-white\/70 {
+  color: #6b7280 !important;
+}
+aside.bg-\[\#0d0c22\] .hover\:bg-white\/8:hover {
+  background-color: #f8f7f4 !important;
+  color: #1a1a1a !important;
+}
+aside.bg-\[\#0d0c22\] .bg-\[\#d63015\]\/90 {
+  background-color: rgba(124, 58, 237, 0.1) !important;
+  color: var(--color-accent) !important;
+  box-shadow: none !important;
+}
+aside.bg-\[\#0d0c22\] .text-\[\#d63015\]\/70 {
+  color: #6b7280 !important;
+}
+aside.bg-\[\#0d0c22\] .text-\[\#d63015\]\/70:hover {
+  background-color: #f8f7f4 !important;
+  color: #1a1a1a !important;
+}
+aside.bg-\[\#0d0c22\] .bg-\[\#d63015\]\/30 {
+  background-color: rgba(124, 58, 237, 0.15) !important;
+  color: var(--color-accent) !important;
+}
+aside.bg-\[\#0d0c22\] .text-\[\#d63015\] {
+  color: var(--color-accent) !important;
+}
+aside.bg-\[\#0d0c22\] .border-t.border-white\/10 {
+  border-top-color: #e5e7eb !important;
+}
+aside.bg-\[\#0d0c22\] .hover\:bg-white\/8:hover {
+  background-color: #f8f7f4 !important;
+}
+
+/* Public Layout Navbar and Footer overrides */
+header.border-\[\#e8e0d8\], .border-\[\#e8e0d8\] {
+  border-color: #e5e7eb !important;
+}
+.bg-\[\#faf7f2\] {
+  background-color: #f8f7f4 !important;
+}
+.text-\[\#0d0c22\] {
+  color: #1a1a1a !important;
+}
+.hover\:text-\[\#d63015\]:hover, .hover\:bg-red-50\/50:hover {
+  color: var(--color-accent) !important;
+  background-color: rgba(124, 58, 237, 0.05) !important;
+}
+.bg-red-50.text-\[\#d63015\] {
+  background-color: rgba(124, 58, 237, 0.1) !important;
+  color: var(--color-accent) !important;
+}
+.shadow-red-200 {
+  box-shadow: none !important;
+}
+
+/* Footer: set dark #0d0c22 background to #1a1a1a (main dark color) */
+footer.bg-\[\#0d0c22\] {
+  background-color: #1a1a1a !important;
+}
+footer.bg-\[\#0d0c22\] .text-white\/40, 
+footer.bg-\[\#0d0c22\] .text-white\/50, 
+footer.bg-\[\#0d0c22\] .text-white\/20, 
+footer.bg-\[\#0d0c22\] .text-white\/30 {
+  color: #a1a1aa !important;
+}
+footer.bg-\[\#0d0c22\] .hover\:text-\[\#d63015\]:hover {
+  color: var(--color-accent) !important;
+}
+footer.bg-\[\#0d0c22\] .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Premium Hover Transitions & Micro-Animations */
+button,
+.btn-animate,
+.card-animate {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+button:hover,
+.btn-animate:hover {
+  transform: translateY(-2px) scale(1.01) !important;
+  cursor: pointer;
+}
+button:active,
+.btn-animate:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+.card-animate:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 24px -10px rgba(124, 58, 237, 0.15) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* Custom sub-second delays for staggered entrance animations */
+.animate__delay-100ms { --animate-delay: 100ms; }
+.animate__delay-150ms { --animate-delay: 150ms; }
+.animate__delay-200ms { --animate-delay: 200ms; }
+.animate__delay-250ms { --animate-delay: 250ms; }
+.animate__delay-300ms { --animate-delay: 300ms; }
+.animate__delay-350ms { --animate-delay: 350ms; }
+.animate__delay-400ms { --animate-delay: 400ms; }
+.animate__delay-450ms { --animate-delay: 450ms; }
+.animate__delay-500ms { --animate-delay: 500ms; }
+.animate__delay-600ms { --animate-delay: 600ms; }
+.animate__delay-700ms { --animate-delay: 700ms; }
+.animate__delay-800ms { --animate-delay: 800ms; }
+.animate__delay-900ms { --animate-delay: 900ms; }
+

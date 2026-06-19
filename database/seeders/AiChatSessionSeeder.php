@@ -14,7 +14,7 @@ class AiChatSessionSeeder extends Seeder
     {
         $lesson = Lesson::first();
         $subject = Subject::where('code', 'MATH')->first();
-        $students = User::whereHas('role', fn($q) => $q->where('name', 'student'))->get();
+        $students = User::role('student')->get();
 
         foreach ($students as $student) {
             AiChatSession::updateOrCreate(

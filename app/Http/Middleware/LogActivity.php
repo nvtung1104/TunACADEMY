@@ -17,18 +17,26 @@ class LogActivity
         $response = $next($request);
 
         if ($request->user()) {
-            $logData = [
-                'user_id' => $request->user()->id,
-                'user_email' => $request->user()->email,
-                'method' => $request->method(),
-                'path' => $request->path(),
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'status_code' => $response->status(),
-                'timestamp' => now(),
-            ];
+            $userId    = $request->user()->id;
+            $userEmail = $request->user()->email;
+            $method    = $request->method();
+            $path      = $request->path();
+            $ip        = $request->ip();
+            $agent     = $request->userAgent();
+            $status    = $response->status();
 
-            Log::channel('activity')->info('User Activity', $logData);
+            defer(function () use ($userId, $userEmail, $method, $path, $ip, $agent, $status) {
+                Log::channel('activity')->info('User Activity', [
+                    'user_id'    => $userId,
+                    'user_email' => $userEmail,
+                    'method'     => $method,
+                    'path'       => $path,
+                    'ip'         => $ip,
+                    'user_agent' => $agent,
+                    'status_code'=> $status,
+                    'timestamp'  => now(),
+                ]);
+            });
         }
 
         return $response;

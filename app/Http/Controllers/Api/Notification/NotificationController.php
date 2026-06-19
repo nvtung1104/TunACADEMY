@@ -16,13 +16,13 @@ class NotificationController extends Controller
 
     public function markAsRead(Request $request, string $id)
     {
-        $request->user()->notifications()->findOrFail($id)->markAsRead();
+        $request->user()->notifications()->findOrFail($id)->update(['read_at' => now()]);
         return $this->success(null, 'Da doc thong bao');
     }
 
     public function markAllAsRead(Request $request)
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()->notifications()->whereNull('read_at')->update(['read_at' => now()]);
         return $this->success(null, 'Da doc tat ca thong bao');
     }
 

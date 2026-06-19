@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Live;
 
 use App\Http\Controllers\Controller;
-use App\Models\{LiveSession, WebrtcSignal};
+use App\Models\{LiveSession, LiveParticipant, WebrtcSignal, LiveChat};
 use Illuminate\Http\Request;
 
 class WebRTCController extends Controller
@@ -31,11 +31,11 @@ class WebRTCController extends Controller
         ]);
 
         WebrtcSignal::create([
-            'live_session_id' => $request->live_session_id,
-            'from_user_id'    => $request->user()->id,
-            'to_user_id'      => $request->to_user_id,
-            'type'            => $request->type,
-            'payload'         => $request->payload,
+            'session_id'   => $request->live_session_id,
+            'from_user_id' => $request->user()->id,
+            'to_user_id'   => $request->to_user_id,
+            'signal_type'  => str_replace('-', '_', $request->type),
+            'payload'      => $request->payload,
         ]);
 
         return $this->success(null, 'Signal gửi thành công');
@@ -43,7 +43,18 @@ class WebRTCController extends Controller
 
     public function joinRoom(Request $request, LiveSession $session)
     {
-        abort_unless($session->isLive(), 422, 'Phong chua mo');
+        abort_unless($session->isLive() || $request->user()->isAdmin(), 422, 'Phong chua mo');
+
+        $userId = $request->user()->id;
+        $isHost = $request->user()->isAdmin()
+            || $session->teacher_id === $userId
+            || optional($session->classroom)->homeroom_teacher_id === $userId;
+
+        LiveParticipant::updateOrCreate(
+            ['session_id' => $session->id, 'user_id' => $userId],
+            ['joined_at' => now(), 'left_at' => null, 'role' => $isHost ? 'host' : 'student']
+        );
+
         $iceData = $this->iceServers()->getData(true);
         return $this->success([
             'room_code'    => $session->room_code,
@@ -56,5 +67,107 @@ class WebRTCController extends Controller
     {
         $session->participants()->where('user_id', $request->user()->id)->whereNull('left_at')->update(['left_at' => now()]);
         return $this->success(null, 'Roi phong thanh cong');
+    }
+
+    public function sessionInfo(LiveSession $session)
+    {
+        return $this->success([
+            'session'      => $session->load([
+                'classroom.grade', 
+                'classroom.homeroomTeacher:id,name', 
+                'subject:id,name,color', 
+                'teacher:id,name',
+                'activeLesson.materials',
+                'activeAssignment.questions'
+            ]),
+            'participants' => $session->participants()->whereNull('left_at')->with('user:id,name,avatar')->get(),
+        ]);
+    }
+
+    public function updatePresentation(Request $request, LiveSession $session)
+    {
+        $userId = $request->user()->id;
+        $isHost = $request->user()->isAdmin()
+            || $session->teacher_id === $userId
+            || optional($session->classroom)->homeroom_teacher_id === $userId;
+
+        abort_unless($isHost, 403, 'Bạn không có quyền trình chiếu.');
+
+        $data = $request->validate([
+            'presentation_type'    => 'required|in:none,lesson,assignment',
+            'active_lesson_id'     => 'nullable|exists:lessons,id',
+            'active_assignment_id' => 'nullable|exists:assignments,id',
+        ]);
+
+        $session->update($data);
+
+        // Broadcast a presentation_changed signal to other users in the room
+        $pIds = $session->participants()
+            ->whereNull('left_at')
+            ->where('user_id', '!=', $userId)
+            ->pluck('user_id');
+
+        foreach ($pIds as $pId) {
+            WebrtcSignal::create([
+                'session_id'   => $session->id,
+                'from_user_id' => $userId,
+                'to_user_id'   => $pId,
+                'signal_type'  => 'presentation_changed',
+                'payload'      => [
+                    'presentation_type'    => $data['presentation_type'],
+                    'active_lesson_id'     => $data['active_lesson_id'],
+                    'active_assignment_id' => $data['active_assignment_id'],
+                ],
+            ]);
+        }
+
+        return $this->success($session->load(['activeLesson.materials', 'activeAssignment.questions']), 'Cập nhật trình chiếu thành công');
+    }
+
+    public function pollSignals(Request $request, LiveSession $session)
+    {
+        $signals = WebrtcSignal::where('session_id', $session->id)
+            ->where('to_user_id', $request->user()->id)
+            ->whereNull('processed_at')
+            ->orderBy('id')
+            ->get();
+
+        if ($signals->isNotEmpty()) {
+            WebrtcSignal::whereIn('id', $signals->pluck('id'))->update(['processed_at' => now()]);
+        }
+
+        // Map signal_type (DB enum) back to frontend 'type' field; also restore hyphen in ice-candidate
+        $mapped = $signals->map(fn($s) => [
+            'from_user_id' => $s->from_user_id,
+            'type'         => str_replace('_', '-', $s->signal_type),
+            'payload'      => $s->payload,
+        ]);
+
+        return $this->success($mapped);
+    }
+
+    public function getMessages(Request $request, LiveSession $session)
+    {
+        $messages = $session->chats()
+            ->with('user:id,name')
+            ->when($request->last_id, fn($q) => $q->where('id', '>', $request->last_id))
+            ->orderBy('id')
+            ->limit(50)
+            ->get();
+
+        return $this->success($messages);
+    }
+
+    public function sendMessage(Request $request, LiveSession $session)
+    {
+        $data = $request->validate(['message' => 'required|string|max:2000']);
+
+        $chat = $session->chats()->create([
+            'user_id' => $request->user()->id,
+            'message' => $data['message'],
+            'type'    => 'text',
+        ]);
+
+        return $this->success($chat->load('user:id,name'), 'OK', 201);
     }
 }
